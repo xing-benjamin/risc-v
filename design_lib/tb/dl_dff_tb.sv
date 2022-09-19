@@ -1,11 +1,13 @@
 //--------------------------------------------------------------
-/*  Filename: dlib_dff.v
+/*
+    Filename: dl_dff_tb.v
 
-    D-flip flop
+    D flip-flop Verilog testbench.
+    Target simulator: Icarus Verilog -g2012
 */
 //--------------------------------------------------------------
 
-module dlib_dff_tb;
+module dl_dff_tb;
 
     localparam CLK_CYC_NS = 1;
 
@@ -30,7 +32,7 @@ module dlib_dff_tb;
         d = ~d;
     end
 
-    dlib_dff dlib_dff_inst (
+    dl_dff dl_dff_inst (
         .clk    (clk),
         .d      (d),
         .q      (q)
@@ -38,8 +40,8 @@ module dlib_dff_tb;
 
     // dump vcd
     initial begin
-        $dumpfile("dlib_dff.vcd");
-        $dumpvars(0, dlib_dff_tb);
+        $dumpfile("dl_dff.vcd");
+        $dumpvars(0, dl_dff_tb);
     end
 
 endmodule
