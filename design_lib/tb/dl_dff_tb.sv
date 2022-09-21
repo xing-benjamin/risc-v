@@ -3,28 +3,35 @@
     Filename: dl_dff_tb.v
 
     D flip-flop Verilog testbench.
-    Target simulator: Icarus Verilog -g2012
 */
 //--------------------------------------------------------------
 
-module dl_dff_tb;
+`include "sim_macros.sv"
 
-    localparam CLK_CYC_NS = 1;
+module dl_dff_tb;
 
     logic clk;
     logic d;
     logic q;
 
+    // Clock generator interface
+    clk_intf #(.CLK_PERIOD(1)) clk_if (
+        .clk(clk)
+    );
+
+    // Instantiate DUT
+    dl_dff dl_dff_inst (
+        .clk    (clk),
+        .d      (d),
+        .q      (q)
+    );
+
+    `SET_SIM_STOP_TIME(100)
+
+    // Drive data input
     initial begin
-        clk = 1'b0;
         d = 1'b0;
-
-        #100;
-        $stop;
     end
-
-    always #(CLK_CYC_NS) clk = ~clk;
-        
 
     always begin
         #($urandom_range(10, 0));
@@ -32,16 +39,6 @@ module dl_dff_tb;
         d = ~d;
     end
 
-    dl_dff dl_dff_inst (
-        .clk    (clk),
-        .d      (d),
-        .q      (q)
-    );
-
     // dump vcd
-    initial begin
-        $dumpfile("dl_dff.vcd");
-        $dumpvars(0, dl_dff_tb);
-    end
-
+    `DUMP_ALL_VCD
 endmodule
