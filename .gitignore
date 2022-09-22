@@ -1,0 +1,9 @@
+# Top-level .gitignore file
+
+### build directories ###
+*/build
+
+### simulation files ###
+*.vvp
+*.log
+*.vcd
