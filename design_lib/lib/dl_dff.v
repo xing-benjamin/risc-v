@@ -1,11 +1,12 @@
 //--------------------------------------------------------------
-/*  Filename: dlib_dff.v
+/*  
+    Filename: dl_dff.v
 
-    D-flip flop
+    D flip-flop implementation.
 */
 //--------------------------------------------------------------
 
-module dlib_dff
+module dl_dff
 (
     input   logic   clk,
     input   logic   d,
