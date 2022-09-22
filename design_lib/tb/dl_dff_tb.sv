@@ -35,8 +35,7 @@ module dl_dff_tb;
 
     always begin
         #($urandom_range(10, 0));
-        @(negedge clk);
-        d = ~d;
+        d <= ~d;
     end
 
     // dump vcd
