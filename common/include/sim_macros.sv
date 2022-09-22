@@ -1,15 +1,15 @@
 //--------------------------------------------------------------
 /*
-    Filename: tb_lib_macros.sv
+    Filename: sim_macros.sv
 
-    Macros commonly used in testbench files.
+    Macros commonly used in simulations.
 */
 //--------------------------------------------------------------
 
 // Dump signals in Icarus Verilog
 `define DUMP_ALL_VCD \
     initial begin \
-        $dumpfile($sformatf("%m.vcd")); \
+        $dumpfile($sformatf("%s/%m.vcd", `BUILD_DIR_PATH)); \
         $dumpvars; \
     end
 
@@ -17,5 +17,5 @@
 `define SET_SIM_STOP_TIME(ticks) \
     initial begin \
         #(ticks); \
-        $stop; \
+        $finish; \
     end
