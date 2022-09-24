@@ -1,12 +1,26 @@
-# design_lib makefile
+#============================
+# risc-v/design_lib/Makefile
+#============================
 
 BUILD_DIR := ./build
 LIB_DIR := ./lib
 TB_DIR := ./tb
+COMMON_DIR := $(REPO_TOP)/common
 
-dl_dff: build_dir
-	iverilog -g2012 -o $(BUILD_DIR)/dl_dff.vvp -D 'BUILD_DIR_PATH="$(BUILD_DIR)"' -c design_lib.cf $(TB_DIR)/dl_dff_tb.sv
-	vvp -n -l $(BUILD_DIR)/dl_dff.log $(BUILD_DIR)/dl_dff.vvp
+commonlib := -I$(COMMON_DIR)/include \
+             -Y .sv -y$(COMMON_DIR)/interfaces
+ivl_options := $(commonlib) \
+               -D 'BUILD_DIR_PATH="$(BUILD_DIR)"'
+
+
+dl_%: $(BUILD_DIR)/dl_%.vvp
+	vvp -n -l $(BUILD_DIR)/dl_$*.log $(BUILD_DIR)/dl_$*.vvp
+
+$(BUILD_DIR)/dl_%.vvp: build_dir $(LIB_DIR)/dl_%.v $(TB_DIR)/dl_%_tb.sv
+	iverilog -g2012 -o $@ $(ivl_options) $(LIB_DIR)/dl_$*.v $(TB_DIR)/dl_$*_tb.sv
+
+%.v %.sv:
+	touch $@
 
 .PHONY: build_dir
 build_dir:
