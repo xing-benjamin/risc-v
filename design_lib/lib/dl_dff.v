@@ -8,9 +8,9 @@
 
 module dl_dff
 (
-    input   logic   clk,
-    input   logic   d,
-    output  logic   q
+    input   wire    clk,
+    input   wire    d,
+    output  reg     q
 );
 
     always @(posedge clk) begin
