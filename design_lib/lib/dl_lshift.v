@@ -9,8 +9,7 @@
 `ifndef __DL_LSHIFT_V__
 `define __DL_LSHIFT_V__
 
-module dl_lshift
-#(
+module dl_lshift #(
     parameter   NUM_BITS = 32,
     localparam  NUM_SHIFT_BITS = $clog2(NUM_BITS)
 )(

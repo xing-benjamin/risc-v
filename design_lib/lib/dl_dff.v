@@ -9,8 +9,7 @@
 `ifndef __DL_DFF_V__
 `define __DL_DFF_V__
 
-module dl_dff
-(
+module dl_dff (
     input   wire    clk,
     input   wire    d,
     output  reg     q

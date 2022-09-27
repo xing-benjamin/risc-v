@@ -10,8 +10,7 @@
 `ifndef __DL_ADDER_V__
 `define __DL_ADDER_V__
 
-module dl_adder
-#(
+module dl_adder #(
     parameter   NUM_BITS = 1
 )(
     input  wire [NUM_BITS-1:0]  a,

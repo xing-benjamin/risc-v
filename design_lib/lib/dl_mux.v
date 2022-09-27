@@ -9,8 +9,7 @@
 `ifndef __DL_MUX_V__
 `define __DL_MUX_V__
 
-module dl_mux
-#(
+module dl_mux #(
     parameter   NUM_BITS = 1
 )(
     input  wire [NUM_BITS-1:0]  in0,

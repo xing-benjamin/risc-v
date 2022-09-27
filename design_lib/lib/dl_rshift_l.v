@@ -9,8 +9,7 @@
 `ifndef __DL_RSHIFT_L_V__
 `define __DL_RSHIFT_L_V__
 
-module dl_rshift_l
-#(
+module dl_rshift_l #(
     parameter   NUM_BITS = 32,
     localparam  NUM_SHIFT_BITS = $clog2(NUM_BITS)
 )(
@@ -20,7 +19,7 @@ module dl_rshift_l
 );
 
     assign out = a >> shift;
-
+    
 endmodule
 
 `endif // __DL_RSHIFT_L_V__

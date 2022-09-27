@@ -9,8 +9,7 @@
 `ifndef __DL_REG_V__
 `define __DL_REG_V__
 
-module dl_reg
-#(
+module dl_reg #(
     parameter   NUM_BITS = 1
 )(
     input  wire                 clk,
