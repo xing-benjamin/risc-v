@@ -6,6 +6,9 @@
 */
 //--------------------------------------------------------------
 
+`ifndef __DL_LSHIFT_V__
+`define __DL_LSHIFT_V__
+
 module dl_lshift
 #(
     parameter   NUM_BITS = 32,
@@ -19,3 +22,5 @@ module dl_lshift
     assign out = a << shift;
 
 endmodule
+
+`endif // __DL_LSHIFT_V__

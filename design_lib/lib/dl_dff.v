@@ -6,6 +6,9 @@
 */
 //--------------------------------------------------------------
 
+`ifndef __DL_DFF_V__
+`define __DL_DFF_V__
+
 module dl_dff
 (
     input   wire    clk,
@@ -18,3 +21,5 @@ module dl_dff
     end
 
 endmodule
+
+`endif // __DL_DFF_V__

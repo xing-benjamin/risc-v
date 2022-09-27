@@ -7,6 +7,9 @@
 */
 //--------------------------------------------------------------
 
+`ifndef __DL_ADDER_V__
+`define __DL_ADDER_V__
+
 module dl_adder
 #(
     parameter   NUM_BITS = 1
@@ -25,3 +28,5 @@ module dl_adder
     assign cout = ab_msb_and | (ab_msb_or & !sum[NUM_BITS-1]);
 
 endmodule
+
+`endif // __DL_ADDER_V__

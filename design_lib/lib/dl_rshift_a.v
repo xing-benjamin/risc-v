@@ -6,6 +6,9 @@
 */
 //--------------------------------------------------------------
 
+`ifndef __DL_RSHIFT_A_V__
+`define __DL_RSHIFT_A_V__
+
 module dl_rshift_a
 #(
     parameter   NUM_BITS = 32,
@@ -23,3 +26,5 @@ module dl_rshift_a
     assign out = (in >> shift) | mask;
 
 endmodule
+
+`endif // __DL_RSHIFT_A_V__

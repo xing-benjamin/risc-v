@@ -6,6 +6,9 @@
 */
 //--------------------------------------------------------------
 
+`ifndef __DL_MUX_V__
+`define __DL_MUX_V__
+
 module dl_mux
 #(
     parameter   NUM_BITS = 1
@@ -19,3 +22,5 @@ module dl_mux
     assign out = sel ? in1 : in0;
 
 endmodule
+
+`endif // __DL_MUX_V__
