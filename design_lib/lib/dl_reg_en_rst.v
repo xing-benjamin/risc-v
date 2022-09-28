@@ -11,7 +11,7 @@
 `define __DL_REG_EN_RST_V__
 
 module dl_reg_en_rst #(
-    parameter   NUM_BITS = 1,
+    parameter   NUM_BITS = 32,
     parameter   RST_VAL = 0
 )(
     input  wire                 clk,

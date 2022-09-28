@@ -10,7 +10,7 @@
 `define __DL_REG_EN_V__
 
 module dl_reg_en #(
-    parameter   NUM_BITS = 1
+    parameter   NUM_BITS = 32
 )(
     input  wire                 clk,
     input  wire                 en,

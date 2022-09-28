@@ -1,14 +1,14 @@
 //--------------------------------------------------------------
 /*
-    Filename: dl_mux_tb.v
+    Filename: dl_mux2_tb.v
 
-    Parameterized mux Verilog testbench.
+    Parameterized 2-to-1 mux Verilog testbench.
 */
 //--------------------------------------------------------------
 
 `include "sim_macros.sv"
 
-module dl_mux_tb;
+module dl_mux2_tb;
 
     localparam  NUM_BITS = 32;
 
@@ -18,7 +18,7 @@ module dl_mux_tb;
     logic [NUM_BITS-1:0]    out;
 
     // Instantiate DUT
-    dl_mux #(.NUM_BITS(NUM_BITS)) dl_mux_inst (
+    dl_mux2 #(.NUM_BITS(NUM_BITS)) dl_mux2_inst (
         .in0    (in0),
         .in1    (in1),
         .sel    (sel),
