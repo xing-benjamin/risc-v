@@ -10,7 +10,7 @@
 
 module dl_lshift_tb;
 
-    localparam  NUM_BITS = 32;
+    localparam  NUM_BITS = 8;
     localparam  NUM_SHIFT_BITS = $clog2(NUM_BITS);
 
     logic [NUM_BITS-1:0]        a;
@@ -19,8 +19,8 @@ module dl_lshift_tb;
 
     // Instantiate DUT
     dl_lshift #(.NUM_BITS(NUM_BITS)) dl_lshift_inst (
-        .a      (a),
-        .shift  (shift),
+        .in      (a),
+        .shamt  (shift),
         .out    (out)
     );
 

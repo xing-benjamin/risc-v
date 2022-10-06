@@ -14,13 +14,13 @@ module dl_rshift_a_tb;
     localparam  NUM_SHIFT_BITS = $clog2(NUM_BITS);
 
     logic [NUM_BITS-1:0]        in;
-    logic [NUM_SHIFT_BITS-1:0]  shift;
+    logic [NUM_SHIFT_BITS-1:0]  shamt;
     logic [NUM_BITS-1:0]        out;
 
     // Instantiate DUT
     dl_rshift_a #(.NUM_BITS(NUM_BITS)) dl_rshift_a_inst (
         .in     (in),
-        .shift  (shift),
+        .shamt  (shamt),
         .out    (out)
     );
 
@@ -29,7 +29,7 @@ module dl_rshift_a_tb;
     // Drive data input
     initial begin
         in = '0;
-        shift = '0;
+        shamt = '0;
     end
 
     always begin
@@ -39,7 +39,7 @@ module dl_rshift_a_tb;
 
     always begin
         #($urandom_range(10, 0));
-        shift <= $urandom();
+        shamt <= $urandom();
     end
 
     // dump vcd

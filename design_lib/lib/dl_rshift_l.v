@@ -13,12 +13,12 @@ module dl_rshift_l #(
     parameter   NUM_BITS = 32,
     localparam  NUM_SHIFT_BITS = $clog2(NUM_BITS)
 )(
-    input  wire [NUM_BITS-1:0]       a,
-    input  wire [NUM_SHIFT_BITS-1:0] shift,
-    output wire [NUM_BITS-1:0]       out
+    input  logic [NUM_BITS-1:0]       in,
+    input  logic [NUM_SHIFT_BITS-1:0] shamt,
+    output logic [NUM_BITS-1:0]       out
 );
 
-    assign out = a >> shift;
+    assign out = in >> shamt;
     
 endmodule
 
