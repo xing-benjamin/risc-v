@@ -35,6 +35,7 @@ module alu #(
     logic [N_BITS-1:0]  add_sub_mux_out;
     logic [N_BITS-1:0]  in1_neg;
     logic [N_BITS-1:0]  alu_adder_sum;
+    logic               alu_adder_ovfl;
 
     // -in1 in two's complement
     assign in1_neg = ~in1 + 1'b1;
@@ -44,7 +45,7 @@ module alu #(
     ) add_sub_mux (
         .in0    (in1),
         .in1    (in1_neg),
-        .sel    (alu_op[0]), // FIXME
+        .sel    (|alu_op), // FIXME
         .out    (add_sub_mux_out)
     );
 
@@ -54,8 +55,16 @@ module alu #(
         .a      (in0),
         .b      (add_sub_mux_out),
         .sum    (alu_adder_sum),
-        .cout   () 
+        .cout   (alu_adder_ovfl) 
     );
+
+    logic [N_BITS-1:0]  alu_slt_out;
+    logic [N_BITS-1:0]  alu_sltu_out;
+    assign alu_slt_out = (!in0[N_BITS-1] & in1[N_BITS-1]) ? '0 :
+                         (in0[N_BITS-1] & !in1[N_BITS-1]) ? {{(N_BITS-1){1'b0}}, 1'b1} :
+                         (alu_adder_sum[N_BITS-1]) ? {{(N_BITS-1){1'b0}}, 1'b1} : '0;
+    // FIXME - find bug through functional verification
+    assign alu_sltu_out = (alu_adder_ovfl) ? {{(N_BITS-1){1'b0}}, 1'b1} : '0;
 
     //=================
     //  SLL, SRL, SRA  
@@ -93,8 +102,8 @@ module alu #(
     ) alu_output_mux (
         .in0    (alu_adder_sum),
         .in1    (alu_lshift_out),
-        .in2    (), // TODO: SLT
-        .in3    (), // TODO: SLTU
+        .in2    (alu_slt_out),
+        .in3    (alu_sltu_out),
         .in4    (), // TODO: XOR
         .in5    (alu_rshift_out),
         .in6    (), // TODO: OR

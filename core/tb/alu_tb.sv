@@ -42,13 +42,15 @@ module alu_tb;
     int case_sel;
     always begin
         #($urandom_range(10, 0));
-        case_sel = $urandom_range(4, 0);
+        case_sel = $urandom_range(6, 0);
         case (case_sel)
             0: alu_op <= 4'b0000;
             1: alu_op <= 4'b0001;
             2: alu_op <= 4'b0010;
-            3: alu_op <= 4'b1010;
-            4: alu_op <= 4'b1011;
+            3: alu_op <= 4'b0100;
+            4: alu_op <= 4'b0110;
+            5: alu_op <= 4'b1010;
+            6: alu_op <= 4'b1011;
         endcase
     end
 
