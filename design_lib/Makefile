@@ -5,7 +5,7 @@
 BUILD_DIR := ./build
 LIB_DIR := ./lib
 TB_DIR := ./tb
-COMMON_DIR := $(REPO_TOP)/common
+COMMON_DIR := $(ROOTDIR)/common
 
 commonlib := -I$(COMMON_DIR)/include \
              -Y .sv -y$(COMMON_DIR)/interfaces

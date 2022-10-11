@@ -5,8 +5,8 @@
 BUILD_DIR := ./build
 SRC_DIR := ./src
 TB_DIR := ./tb
-COMMON_DIR := $(REPO_TOP)/common
-DESIGN_LIB := $(REPO_TOP)/design_lib
+COMMON_DIR := $(ROOTDIR)/common
+DESIGN_LIB := $(ROOTDIR)/design_lib
 
 commonlib := -I$(COMMON_DIR)/include \
              -Y .sv -y$(COMMON_DIR)/interfaces

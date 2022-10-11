@@ -1,3 +1,4 @@
 #!/bin/sh
 
-export REPO_TOP=`git rev-parse --show-toplevel`
+export ROOTDIR=`git rev-parse --show-toplevel`
+export PATH=$PATH:$ROOTDIR/scripts

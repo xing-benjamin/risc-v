@@ -47,7 +47,7 @@ the steps in this [tutorial](https://ughe.github.io/2018/11/06/gtkwave-osx).
 The following is an example of running a simple simulation of a testbench for module
 `dl_dff`, a simple D-flip flop:
 
-    $ cd $REPO_TOP/design_lib
+    $ cd $ROOTDIR/design_lib
     $ make dl_dff
 
 The make command will create a build directory, a scratch directory for compile
