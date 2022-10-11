@@ -10,9 +10,9 @@
 `define __DL_DFF_V__
 
 module dl_dff (
-    input   wire    clk,
-    input   wire    d,
-    output  reg     q
+    input   logic   clk,
+    input   logic   d,
+    output  logic   q
 );
 
     always @(posedge clk) begin

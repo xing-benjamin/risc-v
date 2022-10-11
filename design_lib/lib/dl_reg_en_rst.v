@@ -14,11 +14,11 @@ module dl_reg_en_rst #(
     parameter   NUM_BITS = 32,
     parameter   RST_VAL = 0
 )(
-    input  wire                 clk,
-    input  wire                 rst_n,
-    input  wire                 en,
-    input  wire [NUM_BITS-1:0]  d,
-    output reg  [NUM_BITS-1:0]  q
+    input  logic                clk,
+    input  logic                rst_n,
+    input  logic                en,
+    input  logic [NUM_BITS-1:0] d,
+    output logic [NUM_BITS-1:0] q
 );
 
     always @(posedge clk) begin
@@ -27,8 +27,6 @@ module dl_reg_en_rst #(
         end else begin
             if (en) begin
                 q <= d;
-            end else begin
-                q <= q;
             end
         end
     end

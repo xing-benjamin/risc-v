@@ -18,7 +18,7 @@ module dl_reg_tb;
 
     // Clock generator interface
     clk_intf #(.CLK_PERIOD(1)) clk_if (
-        .clk(clk)
+        .clk    (clk)
     );
 
     // Instantiate DUT

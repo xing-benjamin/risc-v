@@ -25,6 +25,11 @@ module dl_reg_en_rst_tb;
         .clk(clk)
     );
 
+    // Reset interface
+    reset_intf reset_if (
+        .rst_n  (rst_n)
+    );
+
     // Instantiate DUT
     dl_reg_en_rst #(
         .NUM_BITS(NUM_BITS),
@@ -55,11 +60,11 @@ module dl_reg_en_rst_tb;
     end
 
     always begin
-        #($urandom_range(10, 0));
-        if ($urandom_range(10, 0) < 3) begin
-            rst_n <= 1'b0;
-        end else begin
-            rst_n <= 1'b1;
+        #($urandom_range(50, 0));
+        if ($urandom_range(10, 0) < 2) begin
+            reset_if.drive_reset_val(1'b0);
+            #10;
+            reset_if.drive_reset_val(1'b1);
         end
     end
 

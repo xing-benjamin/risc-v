@@ -20,7 +20,11 @@ module dl_reg_rst_tb;
 
     // Clock generator interface
     clk_intf #(.CLK_PERIOD(1)) clk_if (
-        .clk(clk)
+        .clk    (clk)
+    );
+
+    reset_intf reset_if (
+        .rst_n  (rst_n)
     );
 
     // Instantiate DUT
@@ -47,11 +51,11 @@ module dl_reg_rst_tb;
     end
 
     always begin
-        #($urandom_range(10, 0));
-        if ($urandom_range(10, 0) < 3) begin
-            rst_n <= 1'b0;
-        end else begin
-            rst_n <= 1'b1;
+        #($urandom_range(50, 0));
+        if ($urandom_range(10, 0) < 2) begin
+            reset_if.drive_reset_val(1'b0);
+            #10;
+            reset_if.drive_reset_val(1'b1);
         end
     end
 
