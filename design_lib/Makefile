@@ -17,7 +17,7 @@ dl_%: $(BUILD_DIR)/dl_%.vvp
 	vvp -n -l $(BUILD_DIR)/dl_$*.log $(BUILD_DIR)/dl_$*.vvp
 
 $(BUILD_DIR)/dl_%.vvp: build_dir $(LIB_DIR)/dl_%.v $(TB_DIR)/dl_%_tb.sv
-	iverilog -g2012 -o $@ $(ivl_options) $(LIB_DIR)/dl_$*.v $(TB_DIR)/dl_$*_tb.sv
+	iverilog -Wall -g2012 -o $@ $(ivl_options) $(LIB_DIR)/dl_$*.v $(TB_DIR)/dl_$*_tb.sv
 
 %.v %.sv:
 	touch $@
