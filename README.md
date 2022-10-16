@@ -22,7 +22,7 @@ by calling `git rev-parse --show-toplevel`.
 #### Icarus Verilog
 
 [Icarus Verilog](http://iverilog.icarus.com/) is an open-source Verilog synthesis and
-and simulation tool. We will use it to perform RTL compilation to *vvp assembly* format,
+simulation tool. We will use it to perform RTL compilation to *vvp assembly* format,
 which is run by the `vvp` simulator.
 
 Icarus Verilog can be installed using your favorite package manager. On macOS,
