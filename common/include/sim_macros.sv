@@ -19,3 +19,14 @@
         #(ticks); \
         $finish; \
     end
+
+//============================
+// Results checking
+//============================
+`define CHECK_RESULT(message, bool_cond) \
+    if (bool_cond) begin \
+        $info(message); \
+    end else begin \
+        $error(message); \
+    end
+
