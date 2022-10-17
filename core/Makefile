@@ -21,7 +21,7 @@ $(BUILD_DIR)/regfile32.vvp: build_dir $(SRC_DIR)/regfile32.v $(TB_DIR)/regfile32
 	iverilog -Wall -g2012 -o $@ $(ivl_options) $(SRC_DIR)/regfile32.v $(TB_DIR)/regfile32_tb.sv
 
 alu: $(BUILD_DIR)/alu.vvp
-	vvp -n -l $(BUILD_DIR)/alu.log $(BUILD_DIR)/alu.vvp
+	vvp -n -l $(BUILD_DIR)/alu.log $(BUILD_DIR)/alu.vvp > /dev/null
 
 $(BUILD_DIR)/alu.vvp: build_dir $(SRC_DIR)/alu.v $(TB_DIR)/alu_tb.sv
 	iverilog -Wall -g2012 -o $@ $(ivl_options) $(SRC_DIR)/alu.v $(TB_DIR)/alu_tb.sv

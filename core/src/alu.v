@@ -23,15 +23,15 @@ module alu #(
     parameter N_BITS = 32,
     localparam N_BITS_LOG2 = $clog2(N_BITS)
 )(
-    input  logic [3:0]          alu_op, // FIXME: create alu_op_t struct
+    input  logic [3:0]          alu_op, // FIXME BEN: create alu_op_t struct
     input  logic [N_BITS-1:0]   in0,
     input  logic [N_BITS-1:0]   in1,
     output logic [N_BITS-1:0]   out
 );
 
-    //=====================
-    // ADD, SUB, SLT, SLTU 
-    //=====================
+    //================
+    //    ADD, SUB    
+    //================
     logic [N_BITS-1:0]  add_sub_mux_out;
     logic [N_BITS-1:0]  in1_neg;
     logic [N_BITS-1:0]  alu_adder_sum;
@@ -45,7 +45,7 @@ module alu #(
     ) add_sub_mux (
         .in0    (in1),
         .in1    (in1_neg),
-        .sel    (|alu_op), // FIXME
+        .sel    (|alu_op), // FIXME BEN: check if this is fine
         .out    (add_sub_mux_out)
     );
 
@@ -58,13 +58,17 @@ module alu #(
         .cout   (alu_adder_ovfl) 
     );
 
+    //=================
+    //    SLT, SLTU    
+    //=================
     logic [N_BITS-1:0]  alu_slt_out;
     logic [N_BITS-1:0]  alu_sltu_out;
+
     assign alu_slt_out = (!in0[N_BITS-1] & in1[N_BITS-1]) ? '0 :
                          (in0[N_BITS-1] & !in1[N_BITS-1]) ? {{(N_BITS-1){1'b0}}, 1'b1} :
                          (alu_adder_sum[N_BITS-1]) ? {{(N_BITS-1){1'b0}}, 1'b1} : '0;
-    // FIXME - find bug through functional verification
-    assign alu_sltu_out = (alu_adder_ovfl) ? {{(N_BITS-1){1'b0}}, 1'b1} : '0;
+    // FIXME BEN: review this logic
+    assign alu_sltu_out = (!alu_adder_ovfl) ? {{(N_BITS-1){1'b0}}, 1'b1} : '0;
 
     //=================
     //  SLL, SRL, SRA  
@@ -83,7 +87,7 @@ module alu #(
     dl_rshift #(
         .NUM_BITS   (N_BITS)
     ) alu_rshift (
-        .sh_type    (alu_op[0]), // FIXME
+        .sh_type    (alu_op[0]), // FIXME BEN
         .in         (in0),
         .shamt      (in1[N_BITS_LOG2-1:0]),
         .out        (alu_rshift_out)
@@ -92,6 +96,11 @@ module alu #(
     //================
     //  XOR, OR, AND  
     //================
+    // TODO EMILY: instantiate dl_xor module
+
+    // TODO EMILY: instantiate dl_or module
+
+    // TODO EMILY: instantiate dl_and module
 
 
     //================
@@ -104,10 +113,10 @@ module alu #(
         .in1    (alu_lshift_out),
         .in2    (alu_slt_out),
         .in3    (alu_sltu_out),
-        .in4    (), // TODO: XOR
+        .in4    (), // TODO EMILY: connect dl_xor output
         .in5    (alu_rshift_out),
-        .in6    (), // TODO: OR
-        .in7    (), // TODO: AND
+        .in6    (), // TODO EMILY: connect dl_or output
+        .in7    (), // TODO EMILY: connect dl_and output
         .sel    (alu_op[3:1]),
         .out    (out)
     );
