@@ -1,0 +1,3 @@
+#!/bin/sh
+
+grep -irns $1 $ROOTDIR/* | grep -i -e todo -e fixme
