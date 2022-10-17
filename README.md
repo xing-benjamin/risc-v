@@ -79,6 +79,7 @@ There are also other modules in `design_lib` that can be compiled and simulated
 using a similar make command. Feel free to try those out as well.
 
 For an example of a self-checking combinational logic testbench:
+
     $ cd $ROOTDIR/core
     $ make alu
 
