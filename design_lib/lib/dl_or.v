@@ -1,5 +1,5 @@
 //--------------------------------------------------------------
-/*  
+/*
     Filename: dl_or.v
 
     Paramterized bitwise OR operation.
@@ -12,9 +12,11 @@
 module dl_or #(
     parameter   NUM_BITS = 1
 )(
-    // TODO EMILY: define input and output ports
+input  logic [NUM_BITS-1:0]       in0,
+input  logic [NUM_BITS-1:0]       in1,
+output logic [NUM_BITS-1:0]       out
 );
-    // TODO EMILY: implement bitwise OR
+    assign out = in0 | in1;
 
 endmodule
 
