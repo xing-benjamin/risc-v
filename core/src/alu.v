@@ -1,5 +1,5 @@
 //--------------------------------------------------------------
-/*  
+/*
     Filename: alu.v
 
     RV32I arithmetic logic unit.
@@ -30,7 +30,7 @@ module alu #(
 );
 
     //================
-    //    ADD, SUB    
+    //    ADD, SUB
     //================
     logic [N_BITS-1:0]  add_sub_mux_out;
     logic [N_BITS-1:0]  in1_neg;
@@ -55,11 +55,11 @@ module alu #(
         .a      (in0),
         .b      (add_sub_mux_out),
         .sum    (alu_adder_sum),
-        .cout   (alu_adder_ovfl) 
+        .cout   (alu_adder_ovfl)
     );
 
     //=================
-    //    SLT, SLTU    
+    //    SLT, SLTU
     //=================
     logic [N_BITS-1:0]  alu_slt_out;
     logic [N_BITS-1:0]  alu_sltu_out;
@@ -71,7 +71,7 @@ module alu #(
     assign alu_sltu_out = (!alu_adder_ovfl) ? {{(N_BITS-1){1'b0}}, 1'b1} : '0;
 
     //=================
-    //  SLL, SRL, SRA  
+    //  SLL, SRL, SRA
     //=================
     logic [N_BITS-1:0] alu_rshift_out;
     logic [N_BITS-1:0] alu_lshift_out;
@@ -94,14 +94,35 @@ module alu #(
     );
 
     //================
-    //  XOR, OR, AND  
+    //  XOR, OR, AND
     //================
-    // TODO EMILY: instantiate dl_xor module
+    logic [N_BITS-1:0]  alu_xor_out;
+    logic [N_BITS-1:0]  alu_or_out;
+    logic [N_BITS-1:0]  alu_and_out;
 
-    // TODO EMILY: instantiate dl_or module
+    dl_xor #(
+        .NUM_BITS   (N_BITS)
+    ) alu_xor (
+        .in0         (in0),
+        .in1         (in1),
+        .out         (alu_xor_out)
+    );
 
-    // TODO EMILY: instantiate dl_and module
+    dl_or #(
+        .NUM_BITS   (N_BITS)
+    ) alu_or (
+        .in0         (in0),
+        .in1         (in1),
+        .out         (alu_or_out)
+    );
 
+    dl_and #(
+        .NUM_BITS   (N_BITS)
+    ) alu_and (
+        .in0         (in0),
+        .in1         (in1),
+        .out         (alu_and_out)
+    );
 
     //================
     // ALU OUTPUT MUX
@@ -113,10 +134,10 @@ module alu #(
         .in1    (alu_lshift_out),
         .in2    (alu_slt_out),
         .in3    (alu_sltu_out),
-        .in4    (), // TODO EMILY: connect dl_xor output
+        .in4    (alu_xor_out),
         .in5    (alu_rshift_out),
-        .in6    (), // TODO EMILY: connect dl_or output
-        .in7    (), // TODO EMILY: connect dl_and output
+        .in6    (alu_or_out),
+        .in7    (alu_and_out),
         .sel    (alu_op[3:1]),
         .out    (out)
     );
