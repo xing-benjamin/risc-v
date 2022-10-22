@@ -4,11 +4,11 @@ Repo for some fun RISC-V projects.
 
 ## Directory Structure
 
-- common: includes interfaces and macros used across the project
-- core: contains the RTL and testbench code for the RV32I core
-- design_lib: contains RTL and test code for library of basic design modules
-- docs: contains project documentation
-- scripts: collection of various scripts
+- **`common`**: includes interfaces and macros used across the project
+- **`core`**: contains the RTL and testbench code for the RV32I core
+- **`design_lib`**: contains RTL and test code for library of basic design modules
+- **`docs`**: contains project documentation
+- **`scripts`**: collection of various scripts
 
 ## Quick Start
 
