@@ -256,4 +256,7 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+# Obsidian
+.obsidian/
+
 # End of https://www.toptal.com/developers/gitignore/api/python,c++,macos,linux
