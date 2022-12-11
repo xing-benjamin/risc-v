@@ -1,13 +1,13 @@
 //--------------------------------------------------------------
 /*  
-    Filename: regfile32.v
+    Filename: regfile.sv
 
     Paramterized 32-entry register file implementation.
     2 read ports, 1 write port
 */
 //--------------------------------------------------------------
 
-module regfile32 #(
+module regfile #(
     parameter N_BITS = 32,
     parameter N_REGS = 32,
     localparam N_IDX = $clog2(N_REGS)
@@ -36,7 +36,7 @@ module regfile32 #(
 
     // Register array
     generate
-        for (genvar i = 0; i < N_REGS; i++) begin : genblk_regfile_arr
+        for (genvar i = 1; i < N_REGS; i++) begin : genblk_regfile_arr
             logic [N_BITS-1:0]  rd_data;
             dl_reg_en_rst #(
                 .NUM_BITS(N_BITS)
@@ -55,7 +55,7 @@ module regfile32 #(
             dl_mux32 #(
                 .NUM_BITS(N_BITS)
             ) rd0_data_mux (
-                .in0    (genblk_regfile_arr[0].rd_data),
+                .in0    ({N_BITS{1'b0}}),
                 .in1    (genblk_regfile_arr[1].rd_data),
                 .in2    (genblk_regfile_arr[2].rd_data),
                 .in3    (genblk_regfile_arr[3].rd_data),

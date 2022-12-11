@@ -1,6 +1,6 @@
 //--------------------------------------------------------------
 /*
-    Filename: regfile32_tb.v
+    Filename: regfile_tb.sv
 
     Paramterized 32-entry register file, 2r1w Verilog 
     testbench.
@@ -9,7 +9,7 @@
 
 `include "sim_macros.sv"
 
-module regfile32_tb;
+module regfile_tb;
 
     `SET_SIM_STOP_TIME(2000)
 
@@ -42,10 +42,10 @@ module regfile32_tb;
     );
 
     // Instantiate DUT
-    regfile32 #(
+    regfile #(
         .N_BITS(32),
         .N_REGS(32)
-    ) regfile32_inst (
+    ) regfile_inst (
         .clk        (clk),
         .rst_n      (rst_n),
         .rd0_idx    (rd0_idx),
