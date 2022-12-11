@@ -4,26 +4,28 @@
 
     RV32I arithmetic logic unit.
 
-       alu_op  |  3  2  1  0
-    -----------|--------------
-        ADD    |  0  0  0  0
-        SUB    |  0  0  0  1
-        SLL    |  0  0  1  0
-        SLT    |  0  1  0  0
-        SLTU   |  0  1  1  0
-        XOR    |  1  0  0  0
-        SRL    |  1  0  1  0
-        SRA    |  1  0  1  1
-        OR     |  1  1  0  0
-        AND    |  1  1  1  0
+               |  opcode    aux_sel
+       alu_op  |  3  2  1   0
+    -----------|--------------------
+        ADD    |  0  0  0   0
+        SUB    |  0  0  0   1
+        SLL    |  0  0  1   0
+        SLT    |  0  1  0   0
+        SLTU   |  0  1  1   0
+        XOR    |  1  0  0   0
+        SRL    |  1  0  1   0
+        SRA    |  1  0  1   1
+        OR     |  1  1  0   0
+        AND    |  1  1  1   0
 */
 //--------------------------------------------------------------
+import core_types_pkg::alu_op_t;
 
 module alu #(
     parameter N_BITS = 32,
     localparam N_BITS_LOG2 = $clog2(N_BITS)
 )(
-    input  logic [3:0]          alu_op, // FIXME BEN: create alu_op_t struct
+    input  alu_op_t             alu_op,
     input  logic [N_BITS-1:0]   in0,
     input  logic [N_BITS-1:0]   in1,
     output logic [N_BITS-1:0]   out
@@ -87,7 +89,7 @@ module alu #(
     dl_rshift #(
         .NUM_BITS   (N_BITS)
     ) alu_rshift (
-        .sh_type    (alu_op[0]), // FIXME BEN
+        .sh_type    (alu_op.aux_sel), // FIXME BEN
         .in         (in0),
         .shamt      (in1[N_BITS_LOG2-1:0]),
         .out        (alu_rshift_out)
@@ -138,7 +140,7 @@ module alu #(
         .in5    (alu_rshift_out),
         .in6    (alu_or_out),
         .in7    (alu_and_out),
-        .sel    (alu_op[3:1]),
+        .sel    (alu_op.alu_opcode),
         .out    (out)
     );
 

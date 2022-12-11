@@ -32,8 +32,8 @@ $(BUILD_DIR)/regfile.vvp: build_dir $(SRC_DIR)/regfile.sv $(TB_DIR)/regfile_tb.s
 alu: $(BUILD_DIR)/alu.vvp
 	vvp -n -l $(BUILD_DIR)/alu.log $(BUILD_DIR)/alu.vvp > /dev/null
 
-$(BUILD_DIR)/alu.vvp: build_dir $(SRC_DIR)/alu.v $(TB_DIR)/alu_tb.sv
-	iverilog -Wall -g2012 -o $@ $(ivl_options) $(SRC_DIR)/alu.v $(TB_DIR)/alu_tb.sv
+$(BUILD_DIR)/alu.vvp: build_dir $(SRC_DIR)/alu.sv $(TB_DIR)/alu_tb.sv
+	iverilog -Wall -g2012 -o $@ $(ivl_options) $(SRC_DIR)/alu.sv $(TB_DIR)/alu_tb.sv
 
 %.v %.sv:
 	touch $@

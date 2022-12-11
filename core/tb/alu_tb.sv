@@ -8,6 +8,8 @@
 
 `include "sim_macros.sv"
 
+import core_types_pkg::*;
+
 module alu_tb;
 
     `SET_SIM_STOP_TIME(2000)
@@ -17,7 +19,7 @@ module alu_tb;
     localparam N_IDX = $clog2(N_REGS);
 
     // Instantiate DUT
-    logic [3:0]         alu_op;
+    alu_op_t            alu_op;
     logic [N_BITS-1:0]  in0;
     logic [N_BITS-1:0]  in1;
     logic [N_BITS-1:0]  out;
@@ -71,16 +73,16 @@ module alu_tb;
                                                     logic [N_BITS-1:0] in0,
                                                     logic [N_BITS-1:0] in1);
         case (alu_op)
-            4'b0000: return in0 + in1;
-            4'b0001: return in0 - in1;
-            4'b0010: return in0 << in1[4:0];
-            4'b0100: return $signed(in0) < $signed(in1);
-            4'b0110: return in0 < in1; // FIXME BEN: what if in0 == in1 == 0?
-            4'b1000: return in0 ^ in1;
-            4'b1010: return in0 >> in1[4:0];
-            4'b1011: return $signed(in0) >>> in1[4:0];
-            4'b1100: return in0 | in1;
-            4'b1110: return in0 & in1;
+            ADD: return in0 + in1;
+            SUB: return in0 - in1;
+            SLL: return in0 << in1[4:0];
+            SLT: return $signed(in0) < $signed(in1);
+            SLTU: return in0 < in1; // FIXME BEN: what if in0 == in1 == 0?
+            XOR: return in0 ^ in1;
+            SRL: return in0 >> in1[4:0];
+            SRA: return $signed(in0) >>> in1[4:0];
+            OR: return in0 | in1;
+            AND: return in0 & in1;
         endcase
     endfunction : get_expected_output
 
