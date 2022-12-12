@@ -19,7 +19,7 @@
         AND    |  1  1  1   0
 */
 //--------------------------------------------------------------
-import core_types_pkg::alu_op_t;
+import core_types_pkg::*;
 
 module alu #(
     parameter N_BITS = 32,
