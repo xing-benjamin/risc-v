@@ -50,7 +50,8 @@ package core_types_pkg;
         S_type  = 3'b010,
         B_type  = 3'b011,
         U_type  = 3'b100,
-        J_type  = 3'b101
+        J_type  = 3'b101,
+        NONE_t  = 3'b111
     } instr_formats_e;
 
     /*

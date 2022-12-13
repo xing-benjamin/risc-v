@@ -7,13 +7,7 @@
 //--------------------------------------------------------------
 
 import memory_types_pkg::*;
-
-`include "regfile.sv"
-`include "F_stage.sv"
-`include "D_stage.sv"
-`include "X_stage.sv"
-`include "M_stage.sv"
-`include "W_stage.sv"
+import core_types_pkg::*;
 
 module core #(
     parameter N_BITS = 32,

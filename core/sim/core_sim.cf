@@ -1,0 +1,33 @@
+# Core iverilog command file
+
+# Include directories
++incdir+$(COMMON_DIR)/include
++incdir+$(CORE_DIR)/src
+
+# Library directories
++libext+.v+.sv
+-y $(COMMON_DIR)/interfaces
+-y $(DESIGN_LIB)/lib
+
+# Packages
+$(CORE_DIR)/src/core_types_pkg.sv
+$(CORE_DIR)/memory/memory_types_pkg.sv
+
+# Source files
+$(CORE_DIR)/src/core.sv
+$(CORE_DIR)/src/alu.sv
+$(CORE_DIR)/src/regfile.sv
+$(CORE_DIR)/src/F_stage.sv
+$(CORE_DIR)/src/D_stage.sv
+$(CORE_DIR)/src/X_stage.sv
+$(CORE_DIR)/src/M_stage.sv
+$(CORE_DIR)/src/W_stage.sv
+
+# Testbench files
+$(CORE_DIR)/tb/core_tb.sv
+$(CORE_DIR)/memory/memory_model.sv
+
+# Simulation directives
++define+BUILD_DIR_PATH="./build"
++timescale+10ns/1ns
+

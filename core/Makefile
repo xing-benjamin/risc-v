@@ -5,23 +5,19 @@
 BUILD_DIR := ./build
 SRC_DIR := ./src
 TB_DIR := ./tb
-COMMON_DIR := $(ROOTDIR)/common
-DESIGN_LIB := $(ROOTDIR)/design_lib
-CORE_DIR := $(ROOTDIR)/core
+SIM_DIR := ./sim
 
 commonlib := -I$(COMMON_DIR)/include \
              -Y .sv -y$(COMMON_DIR)/interfaces
 designlib := -y$(DESIGN_LIB)/lib
 ivl_options := $(commonlib) $(designlib) \
-               -D 'BUILD_DIR_PATH="$(BUILD_DIR)"' \
-			   $(SRC_DIR)/core_types_pkg.sv \
-			   $(COMMON_DIR)/memory/memory_types_pkg.sv
+               -D 'BUILD_DIR_PATH="$(BUILD_DIR)"'
 
 core: $(BUILD_DIR)/core.vvp
 	vvp -n -l $(BUILD_DIR)/core_tb.log $(BUILD_DIR)/core.vvp
 
 $(BUILD_DIR)/core.vvp: build_dir $(SRC_DIR)/core.sv $(TB_DIR)/core_tb.sv
-	iverilog -Wall -g2012 -o $@ -I$(CORE_DIR)/src $(ivl_options) $(SRC_DIR)/core.sv $(TB_DIR)/core_tb.sv $(COMMON_DIR)/memory/memory_model.sv
+	iverilog -Wall -g2012 -o $@ -c$(SIM_DIR)/core_sim.cf
 
 regfile: $(BUILD_DIR)/regfile.vvp
 	vvp -n -l $(BUILD_DIR)/regfile.log $(BUILD_DIR)/regfile.vvp

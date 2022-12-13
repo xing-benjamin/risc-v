@@ -26,9 +26,6 @@ module D_stage (
     logic [2:0]                 instr_format;
     logic [31:0]                imm;
     alu_op_t                    comp_inst_alu_op;
-
-    assign opcode = instr[OPCODE_WIDTH-1:0];
-
     struct packed {
         logic   LUI;
         logic   AUIPC;
@@ -43,32 +40,40 @@ module D_stage (
         logic   EXCPT;
     } decoded_opcode;
 
-    assign decoded_opcode.LUI = (opcode == core_types_pkg::LUI);
-    assign decoded_opcode.AUIPC = (opcode == core_types_pkg::AUIPC);
-    assign decoded_opcode.JAL = (opcode == core_types_pkg::JAL);
-    assign decoded_opcode.JALR = (opcode == core_types_pkg::JALR);
-    assign decoded_opcode.BRANCH = (opcode == core_types_pkg::BRANCH);
-    assign decoded_opcode.LOAD = (opcode == core_types_pkg::LOAD);
-    assign decoded_opcode.STORE = (opcode == core_types_pkg::STORE);
-    assign decoded_opcode.RI = (opcode == core_types_pkg::RI);
-    assign decoded_opcode.RR = (opcode == core_types_pkg::RR);
-    assign decoded_opcode.FENCE = (opcode == core_types_pkg::FENCE);
-    assign decoded_opcode.EXCPT = (opcode == core_types_pkg::EXCPT);
+    // Decode source and destination registers
+    // In RISC-V, these are always specified in the same bit positions across
+    // all instructions to simplify decode logic.
+    assign rd = instr[11:7];
+    assign rs1 = instr[19:15];
+    assign rs2 = instr[24:20];
 
-    // Instruction format decode
+    // Decode instruction opcode
+    assign opcode = instr[OPCODE_WIDTH-1:0];
+
+    assign decoded_opcode.LUI    = (opcode == core_types_pkg::LUI);
+    assign decoded_opcode.AUIPC  = (opcode == core_types_pkg::AUIPC);
+    assign decoded_opcode.JAL    = (opcode == core_types_pkg::JAL);
+    assign decoded_opcode.JALR   = (opcode == core_types_pkg::JALR);
+    assign decoded_opcode.BRANCH = (opcode == core_types_pkg::BRANCH);
+    assign decoded_opcode.LOAD   = (opcode == core_types_pkg::LOAD);
+    assign decoded_opcode.STORE  = (opcode == core_types_pkg::STORE);
+    assign decoded_opcode.RI     = (opcode == core_types_pkg::RI);
+    assign decoded_opcode.RR     = (opcode == core_types_pkg::RR);
+    assign decoded_opcode.FENCE  = (opcode == core_types_pkg::FENCE);
+    assign decoded_opcode.EXCPT  = (opcode == core_types_pkg::EXCPT);
+
+    // Opcode -> instruction format mapping
     always_comb begin
-        case (opcode)
-            core_types_pkg::LUI:    instr_format = core_types_pkg::U_type;
-            core_types_pkg::AUIPC:  instr_format = core_types_pkg::U_type;
-            core_types_pkg::JAL:    instr_format = core_types_pkg::J_type;
-            core_types_pkg::JALR:   instr_format = core_types_pkg::I_type;
-            core_types_pkg::BRANCH: instr_format = core_types_pkg::B_type;
-            core_types_pkg::LOAD:   instr_format = core_types_pkg::I_type;
-            core_types_pkg::STORE:  instr_format = core_types_pkg::S_type;
-            core_types_pkg::RI:     instr_format = core_types_pkg::I_type;
-            core_types_pkg::RR:     instr_format = core_types_pkg::R_type;
-            default: instr_format = R_type;
-        endcase
+        if      (decoded_opcode.LUI)    instr_format = core_types_pkg::U_type;
+        else if (decoded_opcode.AUIPC)  instr_format = core_types_pkg::U_type;
+        else if (decoded_opcode.JAL)    instr_format = core_types_pkg::J_type;
+        else if (decoded_opcode.JALR)   instr_format = core_types_pkg::I_type;
+        else if (decoded_opcode.BRANCH) instr_format = core_types_pkg::B_type;
+        else if (decoded_opcode.LOAD)   instr_format = core_types_pkg::I_type;
+        else if (decoded_opcode.STORE)  instr_format = core_types_pkg::S_type;
+        else if (decoded_opcode.RI)     instr_format = core_types_pkg::I_type;
+        else if (decoded_opcode.RR)     instr_format = core_types_pkg::R_type;
+        else                            instr_format = core_types_pkg::NONE_t;
     end
 
     // Immediate generation
@@ -86,32 +91,25 @@ module D_stage (
     // ALU op generation
     assign comp_inst_alu_op.alu_opcode = instr[14:12];
     assign comp_inst_alu_op.aux_sel =
-        ((instr[14:12] == 3'b0 && opcode == core_types_pkg::RR) | (instr[14:12] == 3'b101))
-        && instr[30];
+        (instr[14:12] == 3'b0 && decoded_opcode.RI) ? 1'b0 : instr[30];
 
     dl_mux2 #(
         .NUM_BITS   ($bits(alu_op_t))
     ) alu_op_mux (
         .in0    (comp_inst_alu_op),
         .in1    (4'b0),
-        .sel    (!(opcode == core_types_pkg::RR || opcode == core_types_pkg::RI)),
+        .sel    (!(decoded_opcode.RR | decoded_opcode.RI)),
         .out    (alu_op)
     );
 
-    assign rd = instr[11:7];
-    assign rs1 = instr[19:15];
-    assign rs2 = instr[24:20];
 
-    
-    assign rf_wr_en = (opcode == core_types_pkg::LUI ||
-                       opcode == core_types_pkg::AUIPC ||
-                       opcode == core_types_pkg::JAL ||
-                       opcode == core_types_pkg::JALR ||
-                       opcode == core_types_pkg::LOAD ||
-                       opcode == core_types_pkg::RI ||
-                       opcode == core_types_pkg::RR);
-                       
-    //assign rf_wr_en = 1'b1;
+    assign rf_wr_en = ( decoded_opcode.LUI |
+                        decoded_opcode.AUIPC |
+                        decoded_opcode.JAL |
+                        decoded_opcode.JALR |
+                        decoded_opcode.LOAD |
+                        decoded_opcode.RI |
+                        decoded_opcode.RR );
 
     dl_mux2 #(
         .NUM_BITS   (32)
@@ -127,7 +125,7 @@ module D_stage (
     ) opB_mux (
         .in0    (rs2_data),
         .in1    (imm),
-        .sel    (!(opcode == core_types_pkg::RR)),
+        .sel    (!(decoded_opcode.RR)),
         .out    (opB)
     );
 
