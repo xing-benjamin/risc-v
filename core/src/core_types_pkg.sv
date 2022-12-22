@@ -9,6 +9,8 @@
 package core_types_pkg;
 
     localparam N_BITS = 32;
+    localparam RF_N_REGS = 32;
+    localparam RF_IDX_WIDTH = $clog2(RF_N_REGS);
 
     typedef struct packed {
         logic [2:0] alu_opcode;
@@ -29,9 +31,14 @@ package core_types_pkg;
     } alu_op_e;
 
     typedef struct packed {
-        logic [N_BITS-1:0]  pc;
-        logic [N_BITS-1:0]  pc_plus_4;
-        logic [N_BITS-1:0]  instr
-    } F_D_dpath_regs_t;
+        logic [RF_IDX_WIDTH-1:0]    rd;
+        logic                       wr_en;
+    } rf_wb_ctrl_t;
+
+    typedef struct packed {
+        logic       vld;
+        logic       mtype; // 0 = read, 1 = write
+        logic [1:0] len;
+    } dmem_req_ctrl_t;
 
 endpackage

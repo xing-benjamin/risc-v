@@ -10,6 +10,7 @@
 -y $(DESIGN_LIB)/lib
 
 # Packages
+$(CORE_DIR)/src/riscv_pkg.sv
 $(CORE_DIR)/src/core_types_pkg.sv
 $(CORE_DIR)/memory/memory_types_pkg.sv
 
