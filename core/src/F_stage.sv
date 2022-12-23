@@ -6,33 +6,44 @@
 */
 //--------------------------------------------------------------
 
+import core_types_pkg::*;
+
 module F_stage (
+    input  logic        clk,
     input  logic        rst_n,
-    input  logic [31:0] curr_pc,
-    output logic [31:0] next_pc
+    output [N_BITS-1:0] pc,
+    output [N_BITS-1:0] pc_plus4,
+    output [N_BITS-1:0] next_pc,
+    input  [N_BITS-1:0] jmp_branch_tgt
 );
 
-    logic [31:0] next_pc_raw;
-    logic [31:0] curr_pc_plus_4;
-    assign curr_pc_plus_4 = curr_pc + 32'd4;
+    logic        pc_reg_en;
+
+    assign pc_reg_en = rst_n; // FIXME BEN
+
+    // Program counter
+    dl_reg_en_rst #(
+        .NUM_BITS   (32),
+        // 1st instruction fetched at 0x00000000
+        .RST_VAL    (32'hfffffffc)
+    ) program_cntr (
+        .clk        (clk),
+        .rst_n      (rst_n),
+        .en         (pc_reg_en),
+        .d          (next_pc),
+        .q          (pc)
+    );
+
+    assign pc_plus4 = pc + 32'd4;
 
     dl_mux4 #(
         .NUM_BITS   (32)
     ) next_pc_mux (
-        .in0    (curr_pc_plus_4),
-        .in1    (),
+        .in0    (pc_plus4),
+        .in1    (jmp_branch_tgt),
         .in2    (),
         .in3    (),
         .sel    (2'b00), // FIXME BEN
-        .out    (next_pc_raw)
-    );
-
-    dl_mux2 #(
-        .NUM_BITS   (32)
-    ) next_pc_reset_mux (
-        .in0    (next_pc_raw),
-        .in1    (curr_pc),
-        .sel    (!rst_n),
         .out    (next_pc)
     );
 
