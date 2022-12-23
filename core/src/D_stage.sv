@@ -10,6 +10,8 @@ import riscv_pkg::*;
 import core_types_pkg::*;
 
 module D_stage (
+    input  logic                    clk,
+    input  logic                    rst_n,
     input  logic [N_BITS-1:0]       nxt_instr,
     input  logic [N_BITS-1:0]       pc_in,
     input  logic [N_BITS-1:0]       pc_plus4_in,
@@ -20,7 +22,7 @@ module D_stage (
     input  logic [N_BITS-1:0]       rs2_data,
     output logic [N_BITS-1:0]       op1,
     output logic [N_BITS-1:0]       op2,
-    output logic [N_BITS-1:0]       jmp_branch_tgt,
+    output logic [N_BITS-1:0]       jal_branch_tgt,
     output alu_op_t                 alu_op,
     output rf_wb_ctrl_t             rf_wb_ctrl_pkt,
     output dmem_req_ctrl_t          dmem_req_ctrl_pkt
@@ -35,12 +37,12 @@ module D_stage (
     alu_op_t                    comp_inst_alu_op;
     opcode_1hot_struct_t        decoded_opcode;
 
-    ////////////////////////
-    // Pipeline registers //
-    ////////////////////////
+    //////////////////////////////
+    //    Pipeline registers    //
+    //////////////////////////////
     dl_reg_en_rst #(
         .NUM_BITS   (N_BITS)
-    ) imem_rsp_instr_reg (
+    ) D_imem_rsp_instr_reg (
         .clk        (clk),
         .rst_n      (rst_n),
         .en         (1'b1),
@@ -60,7 +62,7 @@ module D_stage (
 
     dl_reg_en_rst #(
         .NUM_BITS   (32)
-    ) pc_plus_4_reg_D (
+    ) D_pc_plus_4_reg (
         .clk        (clk),
         .rst_n      (rst_n),
         .en         (1'b1),
@@ -166,10 +168,10 @@ module D_stage (
 
     dl_adder #(
         .NUM_BITS   (N_BITS)
-    ) jmp_branch_tgt_adder (
+    ) jal_branch_tgt_adder (
         .a      (pc),
         .b      (imm),
-        .sum    (jmp_branch_tgt),
+        .sum    (jal_branch_tgt),
         .cout   ()
     );
 

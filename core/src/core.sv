@@ -30,112 +30,119 @@ module core (
 
     logic [N_BITS-1:0]          pc;
     logic [N_BITS-1:0]          pc_plus4;
+    logic [N_BITS-1:0]          pc_plus4_D;
     logic [N_BITS-1:0]          next_pc;
     logic [RF_IDX_WIDTH-1:0]    rs1;
     logic [RF_IDX_WIDTH-1:0]    rs2;
-    logic [RF_IDX_WIDTH-1:0]    D_rd;
     logic [N_BITS-1:0]          op1;
     logic [N_BITS-1:0]          op2;
-    logic [N_BITS-1:0]          jmp_branch_tgt;
-    logic [4:0]                 X_rd;
+    logic [N_BITS-1:0]          jal_branch_tgt;
+    logic [N_BITS-1:0]          branch_tgt;
     logic [N_BITS-1:0]          rs1_data;
     logic [N_BITS-1:0]          rs2_data;
     alu_op_t                    alu_op;
-    rf_wb_ctrl_t                rf_wb_ctrl_pkt;
-    dmem_req_ctrl_t             dmem_req_ctrl_pkt;              
+    rf_wb_ctrl_t                rf_wb_ctrl_pkt_D;
+    rf_wb_ctrl_t                rf_wb_ctrl_pkt_X;
+    rf_wb_ctrl_t                rf_wb_ctrl_pkg_M;
+    dmem_req_ctrl_t             dmem_req_ctrl_pkt_D;
+    dmem_req_ctrl_t             dmem_req_ctrl_pkt_X;
+    logic [N_BITS-1:0]          X_out;
 
-    logic [N_BITS-1:0]      X_out;
-    logic [N_BITS-1:0]      M_out;
-    logic [N_BITS-1:0]      rf_wr_data;
-    logic [N_BITS-1:0]      W_data_in;
+    logic [N_BITS-1:0]          M_out;
+    logic [N_BITS-1:0]          rf_wr_data;
 
     // Register file
     regfile #(    
         .N_BITS (N_BITS),
         .N_REGS (RF_N_REGS)
     ) rf (
-        .clk        (clk),
-        .rst_n      (rst_n),
-        .rd0_idx    (rs1),
-        .rd1_idx    (rs2),
-        .rd0_data   (rs1_data),
-        .rd1_data   (rs2_data),
-        .wr_en      (rf_wr_en),
-        .wr_idx     (D_rd),
-        .wr_data    (rf_wr_data)
+        .clk                (clk),
+        .rst_n              (rst_n),
+        .rd0_idx            (rs1),
+        .rd1_idx            (rs2),
+        .rd0_data           (rs1_data),
+        .rd1_data           (rs2_data),
+        .wr_en              (rf_wb_ctrl_pkt_X.wr_en),
+        .wr_idx             (rf_wb_ctrl_pkt_X.rd),
+        .wr_data            (rf_wr_data)
     );
 
     F_stage F_stage_inst (
-        .clk            (clk),
-        .rst_n          (rst_n),
-        .pc             (pc),
-        .pc_plus4       (pc_plus4),
-        .next_pc        (next_pc),
-        .jmp_branch_tgt (jmp_branch_tgt)
+        .clk                (clk),
+        .rst_n              (rst_n),
+        .pc                 (pc),
+        .pc_plus4           (pc_plus4),
+        .next_pc            (next_pc),
+        .jal_tgt            (jal_branch_tgt),
+        .branch_tgt         (branch_tgt),
+        .jalr_tgt           (X_out)
     );
 
     D_stage D_stage_inst (
+        .clk                (clk),
+        .rst_n              (rst_n),
         .nxt_instr          (imem_rsp.data),
         .pc_in              (pc),
         .pc_plus4_in        (pc_plus4),
-        .pc_plus4_out       ()
+        .pc_plus4_out       (pc_plus4_D),
         .rs1                (rs1),
         .rs2                (rs2),
         .rs1_data           (rs1_data),
         .rs2_data           (rs2_data),
         .op1                (op1),
         .op2                (op2),
-        .jmp_branch_tgt     (jmp_branch_tgt),
-        .alu_op             (D_alu_op),
-        .rf_wb_ctrl_pkt     (rf_wb_ctrl_pkt),
-        .dmem_req_ctrl_pkt  (dmem_req_ctrl_pkt)
+        .jal_branch_tgt     (jal_branch_tgt),
+        .alu_op             (alu_op),
+        .rf_wb_ctrl_pkt     (rf_wb_ctrl_pkt_D),
+        .dmem_req_ctrl_pkt  (dmem_req_ctrl_pkt_D)
     );
 
     X_stage X_stage_inst (
-        .alu_op     (alu_op),
-        .in0        (X_op1),
-        .in1        (X_op2),
-        .out        (X_out)
+        .clk                (clk),
+        .rst_n              (rst_n),
+        .alu_op_nxt         (alu_op),
+        .rf_wb_ctrl_pkt_in  (rf_wb_ctrl_pkt_D),
+        .rf_wb_ctrl_pkt_out (rf_wb_ctrl_pkt_X),
+        .dmem_req_ctrl_pkt_in   (dmem_req_ctrl_pkt_D),
+        .dmem_req_ctrl_pkt_out  (dmem_req_ctrl_pkt_X),
+        .op1_nxt            (op1),
+        .op2_nxt            (op2),
+        .pc_plus4_in        (pc_plus4_D),
+        .branch_tgt_in      (jal_branch_tgt),
+        .branch_tgt         (branch_tgt),
+        .X_out              (X_out)
     );
 
     M_stage M_stage_inst (
-        .X_stage_data   (X_out),
-        .mem_rsp_data   (dmem_rsp.data),
-        .out            (M_out)
-    );
-
-    dl_reg_en_rst #(
-        .NUM_BITS   (32)
-    ) rf_wr_data_reg (
-        .clk        (clk),
-        .rst_n      (rst_n),
-        .en         (1'b1),
-        .d          (M_out),
-        .q          (W_data_in)
+        .X_stage_data       (X_out),
+        .mem_rsp_data       (dmem_rsp.data),
+        .out                (M_out)
     );
 
     W_stage W_stage_inst (
-        .in_wr_data     (W_data_in),
-        .out_wr_data    (rf_wr_data)
+        .in_wr_data         (M_out),
+        .out_wr_data        (rf_wr_data)
     );
 
     ///////////////////////
     // Memory Interfaces //
     ///////////////////////
+    assign imem_req_vld = rst_n;
+
     assign imem_req.mtype = READ;
     assign imem_req.addr = next_pc;
     assign imem_req.len = 2'b0;
     assign imem_req.data = 32'b0;
-    assign imem_req_vld = rst_n;
 
     assign imem_rsp_rdy = 1'b1;
 
-    assign dmem_req_vld = mem_access;
+    assign dmem_req_vld = dmem_req_ctrl_pkt_X.vld;
+
+    assign dmem_req.mtype = dmem_req_ctrl_pkt_X.mtype;
     assign dmem_req.addr = X_out;
-    assign dmem_req.len = mem_len;
+    assign dmem_req.len = dmem_req_ctrl_pkt_X.len;
     assign dmem_req.data = rs2_data;
 
-    
-
+    assign dmem_rsp_rdy = 1'b1;
 
 endmodule : core

@@ -14,7 +14,9 @@ module F_stage (
     output [N_BITS-1:0] pc,
     output [N_BITS-1:0] pc_plus4,
     output [N_BITS-1:0] next_pc,
-    input  [N_BITS-1:0] jmp_branch_tgt
+    input  [N_BITS-1:0] jal_tgt,
+    input  [N_BITS-1:0] branch_tgt,
+    input  [N_BITS-1:0] jalr_tgt
 );
 
     logic        pc_reg_en;
@@ -40,9 +42,9 @@ module F_stage (
         .NUM_BITS   (32)
     ) next_pc_mux (
         .in0    (pc_plus4),
-        .in1    (jmp_branch_tgt),
-        .in2    (),
-        .in3    (),
+        .in1    (jal_tgt),
+        .in2    (branch_tgt),
+        .in3    (jalr_tgt),
         .sel    (2'b00), // FIXME BEN
         .out    (next_pc)
     );
