@@ -16,6 +16,8 @@ module D_stage (
     input  logic [N_BITS-1:0]       pc_in,
     input  logic [N_BITS-1:0]       pc_plus4_in,
     output logic [N_BITS-1:0]       pc_plus4_out,
+    output logic [RF_IDX_WIDTH-1:0] rs1,
+    output logic [RF_IDX_WIDTH-1:0] rs2,
     input  logic [N_BITS-1:0]       rs1_data,
     input  logic [N_BITS-1:0]       rs2_data,
     input  logic [N_BITS-1:0]       X_bypass,
@@ -40,8 +42,11 @@ module D_stage (
     logic [N_BITS-1:0]          imm;
     alu_op_t                    comp_inst_alu_op;
     opcode_1hot_struct_t        decoded_opcode;
+    instr_fmt_1hot_struct_t     decoded_instr_fmt;
     logic [N_BITS-1:0]          op1_raw;
     logic [N_BITS-1:0]          op2_raw;
+    logic                       rs1_vld;
+    logic                       rs2_vld;
 
     //////////////////////////////
     //    Pipeline registers    //
@@ -80,8 +85,8 @@ module D_stage (
     // In RISC-V, these are always specified in the same bit positions across
     // all instructions to simplify decode logic.
     assign rf_ctrl_pkt.rd = instr[11:7];
-    assign rf_ctrl_pkt.rs1 = instr[19:15];
-    assign rf_ctrl_pkt.rs2 = instr[24:20];
+    assign rs1 = instr[19:15];
+    assign rs2 = instr[24:20];
     assign opcode = instr[6:0];
     assign funct3 = instr[14:12];
 
@@ -112,6 +117,14 @@ module D_stage (
         else                            instr_format = riscv_pkg::NONE_t;
     end
 
+    // Decode instruction format
+    assign decoded_instr_fmt.R_type = (instr_format == riscv_pkg::R_type);
+    assign decoded_instr_fmt.I_type = (instr_format == riscv_pkg::I_type);
+    assign decoded_instr_fmt.S_type = (instr_format == riscv_pkg::S_type);
+    assign decoded_instr_fmt.B_type = (instr_format == riscv_pkg::B_type);
+    assign decoded_instr_fmt.U_type = (instr_format == riscv_pkg::U_type);
+    assign decoded_instr_fmt.J_type = (instr_format == riscv_pkg::J_type);
+
     // Immediate generation
     always_comb begin
         case (instr_format)
@@ -139,13 +152,19 @@ module D_stage (
     );
 
     // Register file writeback
-    assign rf_ctrl_pkt.wr_en = (decoded_opcode.LUI |
-                                decoded_opcode.AUIPC |
-                                decoded_opcode.JAL |
-                                decoded_opcode.JALR |
-                                decoded_opcode.LOAD |
-                                decoded_opcode.RI |
-                                decoded_opcode.RR);
+    assign rf_ctrl_pkt.vld = (decoded_instr_fmt.R_type |
+                              decoded_instr_fmt.I_type |
+                              decoded_instr_fmt.U_type |
+                              decoded_instr_fmt.J_type);
+
+    assign rs1_vld = (decoded_instr_fmt.R_type |
+                      decoded_instr_fmt.I_type |
+                      decoded_instr_fmt.S_type |
+                      decoded_instr_fmt.B_type);
+
+    assign rs2_vld = (decoded_instr_fmt.R_type |
+                      decoded_instr_fmt.S_type |
+                      decoded_instr_fmt.B_type);
 
     // Load/store memory access
     assign dmem_req_ctrl_pkt.vld = (decoded_opcode.LOAD | 
@@ -174,10 +193,10 @@ module D_stage (
 
     logic [1:0] op1_bypass_mux_sel;
     always_comb begin
-        if (rf_ctrl_pkt.rs1 == 5'b0) op1_bypass_mux_sel = 2'b00;
-        else if (X_rf_ctrl_pkt.rs1 == rf_ctrl_pkt.rs1) op1_bypass_mux_sel = 2'b01;
-        else if (M_rf_ctrl_pkt.rs1 == rf_ctrl_pkt.rs1) op1_bypass_mux_sel = 2'b10;
-        else if (W_rf_ctrl_pkt.rs1 == rf_ctrl_pkt.rs1) op1_bypass_mux_sel = 2'b11;
+        if (rs1 == 5'b0) op1_bypass_mux_sel = 2'b00;
+        else if (X_rf_ctrl_pkt.rd == rs1 && X_rf_ctrl_pkt.vld && rs1_vld) op1_bypass_mux_sel = 2'b01;
+        else if (M_rf_ctrl_pkt.rd == rs1 && M_rf_ctrl_pkt.vld && rs1_vld) op1_bypass_mux_sel = 2'b10;
+        else if (W_rf_ctrl_pkt.rd == rs1 && W_rf_ctrl_pkt.vld && rs1_vld) op1_bypass_mux_sel = 2'b11;
         else op1_bypass_mux_sel = 2'b00; 
     end
 
@@ -195,10 +214,10 @@ module D_stage (
 
     logic [1:0] op2_bypass_mux_sel;
     always_comb begin
-        if (rf_ctrl_pkt.rs1 == 5'b0) op1_bypass_mux_sel = 2'b00;
-        else if (X_rf_ctrl_pkt.rs2 == rf_ctrl_pkt.rs2) op2_bypass_mux_sel = 2'b01;
-        else if (M_rf_ctrl_pkt.rs2 == rf_ctrl_pkt.rs2) op2_bypass_mux_sel = 2'b10;
-        else if (W_rf_ctrl_pkt.rs2 == rf_ctrl_pkt.rs2) op2_bypass_mux_sel = 2'b11;
+        if (rs1 == 5'b0) op1_bypass_mux_sel = 2'b00;
+        else if (X_rf_ctrl_pkt.rd == rs2 && X_rf_ctrl_pkt.vld && rs2_vld) op2_bypass_mux_sel = 2'b01;
+        else if (M_rf_ctrl_pkt.rd == rs2 && M_rf_ctrl_pkt.vld && rs2_vld) op2_bypass_mux_sel = 2'b10;
+        else if (W_rf_ctrl_pkt.rd == rs2 && W_rf_ctrl_pkt.vld && rs2_vld) op2_bypass_mux_sel = 2'b11;
         else op2_bypass_mux_sel = 2'b00; 
     end
 

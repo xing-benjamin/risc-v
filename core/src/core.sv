@@ -58,11 +58,11 @@ module core (
     ) rf (
         .clk                    (clk),
         .rst_n                  (rst_n),
-        .rd0_idx                (rf_ctrl_pkt_D.rs1),
-        .rd1_idx                (rf_ctrl_pkt_D.rs2),
+        .rd0_idx                (rs1),
+        .rd1_idx                (rs2),
         .rd0_data               (rs1_data),
         .rd1_data               (rs2_data),
-        .wr_en                  (rf_ctrl_pkt_W.wr_en),
+        .wr_en                  (rf_ctrl_pkt_W.vld),
         .wr_idx                 (rf_ctrl_pkt_W.rd),
         .wr_data                (W_out)
     );
@@ -85,6 +85,8 @@ module core (
         .pc_in                  (pc),
         .pc_plus4_in            (pc_plus4),
         .pc_plus4_out           (pc_plus4_D),
+        .rs1                    (rs1),
+        .rs2                    (rs2),
         .rs1_data               (rs1_data),
         .rs2_data               (rs2_data),
         .X_bypass               (X_out),
