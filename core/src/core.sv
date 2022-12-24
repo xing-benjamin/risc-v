@@ -43,85 +43,93 @@ module core (
     alu_op_t                    alu_op;
     rf_wb_ctrl_t                rf_wb_ctrl_pkt_D;
     rf_wb_ctrl_t                rf_wb_ctrl_pkt_X;
-    rf_wb_ctrl_t                rf_wb_ctrl_pkg_M;
+    rf_wb_ctrl_t                rf_wb_ctrl_pkt_M;
+    rf_wb_ctrl_t                rf_wb_ctrl_pkt_W;
     dmem_req_ctrl_t             dmem_req_ctrl_pkt_D;
     dmem_req_ctrl_t             dmem_req_ctrl_pkt_X;
     logic [N_BITS-1:0]          X_out;
-
     logic [N_BITS-1:0]          M_out;
-    logic [N_BITS-1:0]          rf_wr_data;
+    logic [N_BITS-1:0]          W_out;
 
     // Register file
     regfile #(    
         .N_BITS (N_BITS),
         .N_REGS (RF_N_REGS)
     ) rf (
-        .clk                (clk),
-        .rst_n              (rst_n),
-        .rd0_idx            (rs1),
-        .rd1_idx            (rs2),
-        .rd0_data           (rs1_data),
-        .rd1_data           (rs2_data),
-        .wr_en              (rf_wb_ctrl_pkt_X.wr_en),
-        .wr_idx             (rf_wb_ctrl_pkt_X.rd),
-        .wr_data            (rf_wr_data)
+        .clk                    (clk),
+        .rst_n                  (rst_n),
+        .rd0_idx                (rs1),
+        .rd1_idx                (rs2),
+        .rd0_data               (rs1_data),
+        .rd1_data               (rs2_data),
+        .wr_en                  (rf_wb_ctrl_pkt_W.wr_en),
+        .wr_idx                 (rf_wb_ctrl_pkt_W.rd),
+        .wr_data                (W_out)
     );
 
     F_stage F_stage_inst (
-        .clk                (clk),
-        .rst_n              (rst_n),
-        .pc                 (pc),
-        .pc_plus4           (pc_plus4),
-        .next_pc            (next_pc),
-        .jal_tgt            (jal_branch_tgt),
-        .branch_tgt         (branch_tgt),
-        .jalr_tgt           (X_out)
+        .clk                    (clk),
+        .rst_n                  (rst_n),
+        .pc                     (pc),
+        .pc_plus4               (pc_plus4),
+        .next_pc                (next_pc),
+        .jal_tgt                (jal_branch_tgt),
+        .branch_tgt             (branch_tgt),
+        .jalr_tgt               (X_out)
     );
 
     D_stage D_stage_inst (
-        .clk                (clk),
-        .rst_n              (rst_n),
-        .nxt_instr          (imem_rsp.data),
-        .pc_in              (pc),
-        .pc_plus4_in        (pc_plus4),
-        .pc_plus4_out       (pc_plus4_D),
-        .rs1                (rs1),
-        .rs2                (rs2),
-        .rs1_data           (rs1_data),
-        .rs2_data           (rs2_data),
-        .op1                (op1),
-        .op2                (op2),
-        .jal_branch_tgt     (jal_branch_tgt),
-        .alu_op             (alu_op),
-        .rf_wb_ctrl_pkt     (rf_wb_ctrl_pkt_D),
-        .dmem_req_ctrl_pkt  (dmem_req_ctrl_pkt_D)
+        .clk                    (clk),
+        .rst_n                  (rst_n),
+        .nxt_instr              (imem_rsp.data),
+        .pc_in                  (pc),
+        .pc_plus4_in            (pc_plus4),
+        .pc_plus4_out           (pc_plus4_D),
+        .rs1                    (rs1),
+        .rs2                    (rs2),
+        .rs1_data               (rs1_data),
+        .rs2_data               (rs2_data),
+        .op1                    (op1),
+        .op2                    (op2),
+        .jal_branch_tgt         (jal_branch_tgt),
+        .alu_op                 (alu_op),
+        .rf_wb_ctrl_pkt         (rf_wb_ctrl_pkt_D),
+        .dmem_req_ctrl_pkt      (dmem_req_ctrl_pkt_D)
     );
 
     X_stage X_stage_inst (
-        .clk                (clk),
-        .rst_n              (rst_n),
-        .alu_op_nxt         (alu_op),
-        .rf_wb_ctrl_pkt_in  (rf_wb_ctrl_pkt_D),
-        .rf_wb_ctrl_pkt_out (rf_wb_ctrl_pkt_X),
+        .clk                    (clk),
+        .rst_n                  (rst_n),
+        .alu_op_nxt             (alu_op),
+        .rf_wb_ctrl_pkt_in      (rf_wb_ctrl_pkt_D),
+        .rf_wb_ctrl_pkt_out     (rf_wb_ctrl_pkt_X),
         .dmem_req_ctrl_pkt_in   (dmem_req_ctrl_pkt_D),
         .dmem_req_ctrl_pkt_out  (dmem_req_ctrl_pkt_X),
-        .op1_nxt            (op1),
-        .op2_nxt            (op2),
-        .pc_plus4_in        (pc_plus4_D),
-        .branch_tgt_in      (jal_branch_tgt),
-        .branch_tgt         (branch_tgt),
-        .X_out              (X_out)
+        .op1_nxt                (op1),
+        .op2_nxt                (op2),
+        .pc_plus4_in            (pc_plus4_D),
+        .branch_tgt_in          (jal_branch_tgt),
+        .branch_tgt             (branch_tgt),
+        .data_out               (X_out)
     );
 
     M_stage M_stage_inst (
-        .X_stage_data       (X_out),
-        .mem_rsp_data       (dmem_rsp.data),
-        .out                (M_out)
+        .clk                    (clk),
+        .rst_n                  (rst_n),
+        .exe_data_in            (X_out),
+        .mem_rsp_data           (dmem_rsp.data),
+        .rf_wb_ctrl_pkt_in      (rf_wb_ctrl_pkt_X),
+        .rf_wb_ctrl_pkt_out     (rf_wb_ctrl_pkt_M),
+        .data_out               (M_out)
     );
 
     W_stage W_stage_inst (
-        .in_wr_data         (M_out),
-        .out_wr_data        (rf_wr_data)
+        .clk                    (clk),
+        .rst_n                  (rst_n),
+        .rf_wb_ctrl_pkt_in      (rf_wb_ctrl_pkt_M),
+        .rf_wb_ctrl_pkt_out     (rf_wb_ctrl_pkt_W),
+        .data_in                (M_out),
+        .data_out               (W_out)
     );
 
     ///////////////////////

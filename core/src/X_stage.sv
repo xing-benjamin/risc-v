@@ -21,7 +21,7 @@ module X_stage (
     input  logic [N_BITS-1:0]   pc_plus4_in,
     input  logic [N_BITS-1:0]   branch_tgt_in,
     output logic [N_BITS-1:0]   branch_tgt,
-    output logic [N_BITS-1:0]   X_out
+    output logic [N_BITS-1:0]   data_out
 );
 
     logic [N_BITS-1:0]      pc_plus4;
@@ -120,7 +120,7 @@ module X_stage (
         .in0    (alu_out),
         .in1    (pc_plus4),
         .sel    (1'b0),
-        .out    (X_out)
+        .out    (data_out)
     );
 
 endmodule : X_stage

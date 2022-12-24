@@ -6,13 +6,38 @@
 */
 //--------------------------------------------------------------
 
-module W_stage #(
-    parameter N_BITS = 32
-)(
-    input  logic [N_BITS-1:0]   in_wr_data,
-    output logic [N_BITS-1:0]   out_wr_data
+import core_types_pkg::*;
+
+module W_stage (
+    input                       clk,
+    input                       rst_n,
+    input  rf_wb_ctrl_t         rf_wb_ctrl_pkt_in,
+    output rf_wb_ctrl_t         rf_wb_ctrl_pkt_out,
+    input  logic [N_BITS-1:0]   data_in,
+    output logic [N_BITS-1:0]   data_out
 );
 
-    assign out_wr_data = in_wr_data;
+    //////////////////////////////
+    //    Pipeline registers    //
+    //////////////////////////////
+    dl_reg_en_rst #(
+        .NUM_BITS   (N_BITS)
+    ) data_in_reg (
+        .clk        (clk),
+        .rst_n      (rst_n),
+        .en         (1'b1),
+        .d          (data_in),
+        .q          (data_out)
+    );
+
+    dl_reg_en_rst #(
+        .NUM_BITS   ($bits(rf_wb_ctrl_t))
+    ) rf_wb_ctrl_pkt_reg (
+        .clk        (clk),
+        .rst_n      (rst_n),
+        .en         (1'b1),
+        .d          (rf_wb_ctrl_pkt_in),
+        .q          (rf_wb_ctrl_pkt_out)
+    );
 
 endmodule : W_stage
