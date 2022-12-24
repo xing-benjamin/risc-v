@@ -31,9 +31,11 @@ package core_types_pkg;
     } alu_op_e;
 
     typedef struct packed {
+        logic [RF_IDX_WIDTH-1:0]    rs1;
+        logic [RF_IDX_WIDTH-1:0]    rs2;
         logic [RF_IDX_WIDTH-1:0]    rd;
         logic                       wr_en;
-    } rf_wb_ctrl_t;
+    } rf_ctrl_t;
 
     typedef struct packed {
         logic       vld;

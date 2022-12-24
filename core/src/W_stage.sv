@@ -11,8 +11,8 @@ import core_types_pkg::*;
 module W_stage (
     input                       clk,
     input                       rst_n,
-    input  rf_wb_ctrl_t         rf_wb_ctrl_pkt_in,
-    output rf_wb_ctrl_t         rf_wb_ctrl_pkt_out,
+    input  rf_ctrl_t            rf_ctrl_pkt_in,
+    output rf_ctrl_t            rf_ctrl_pkt_out,
     input  logic [N_BITS-1:0]   data_in,
     output logic [N_BITS-1:0]   data_out
 );
@@ -31,13 +31,13 @@ module W_stage (
     );
 
     dl_reg_en_rst #(
-        .NUM_BITS   ($bits(rf_wb_ctrl_t))
-    ) rf_wb_ctrl_pkt_reg (
+        .NUM_BITS   ($bits(rf_ctrl_t))
+    ) rf_ctrl_pkt_reg (
         .clk        (clk),
         .rst_n      (rst_n),
         .en         (1'b1),
-        .d          (rf_wb_ctrl_pkt_in),
-        .q          (rf_wb_ctrl_pkt_out)
+        .d          (rf_ctrl_pkt_in),
+        .q          (rf_ctrl_pkt_out)
     );
 
 endmodule : W_stage

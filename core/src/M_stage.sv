@@ -13,8 +13,8 @@ module M_stage (
     input                       rst_n,
     input  logic [N_BITS-1:0]   exe_data_in,
     input  logic [N_BITS-1:0]   mem_rsp_data,
-    input  rf_wb_ctrl_t         rf_wb_ctrl_pkt_in,
-    output rf_wb_ctrl_t         rf_wb_ctrl_pkt_out,
+    input  rf_ctrl_t            rf_ctrl_pkt_in,
+    output rf_ctrl_t            rf_ctrl_pkt_out,
     output logic [N_BITS-1:0]   data_out
 );
 
@@ -34,13 +34,13 @@ module M_stage (
     );
 
     dl_reg_en_rst #(
-        .NUM_BITS   ($bits(rf_wb_ctrl_t))
-    ) rf_wb_ctrl_pkt_reg (
+        .NUM_BITS   ($bits(rf_ctrl_t))
+    ) rf_ctrl_pkt_reg (
         .clk        (clk),
         .rst_n      (rst_n),
         .en         (1'b1),
-        .d          (rf_wb_ctrl_pkt_in),
-        .q          (rf_wb_ctrl_pkt_out)
+        .d          (rf_ctrl_pkt_in),
+        .q          (rf_ctrl_pkt_out)
     );
 
     dl_mux2 #(

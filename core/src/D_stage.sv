@@ -16,15 +16,19 @@ module D_stage (
     input  logic [N_BITS-1:0]       pc_in,
     input  logic [N_BITS-1:0]       pc_plus4_in,
     output logic [N_BITS-1:0]       pc_plus4_out,
-    output logic [RF_IDX_WIDTH-1:0] rs1,
-    output logic [RF_IDX_WIDTH-1:0] rs2,
     input  logic [N_BITS-1:0]       rs1_data,
     input  logic [N_BITS-1:0]       rs2_data,
+    input  logic [N_BITS-1:0]       X_bypass,
+    input  logic [N_BITS-1:0]       M_bypass,
+    input  logic [N_BITS-1:0]       W_bypass,
+    input  rf_ctrl_t                X_rf_ctrl_pkt,
+    input  rf_ctrl_t                M_rf_ctrl_pkt,
+    input  rf_ctrl_t                W_rf_ctrl_pkt,
     output logic [N_BITS-1:0]       op1,
     output logic [N_BITS-1:0]       op2,
     output logic [N_BITS-1:0]       jal_branch_tgt,
     output alu_op_t                 alu_op,
-    output rf_wb_ctrl_t             rf_wb_ctrl_pkt,
+    output rf_ctrl_t                rf_ctrl_pkt,
     output dmem_req_ctrl_t          dmem_req_ctrl_pkt
 );
 
@@ -36,6 +40,8 @@ module D_stage (
     logic [N_BITS-1:0]          imm;
     alu_op_t                    comp_inst_alu_op;
     opcode_1hot_struct_t        decoded_opcode;
+    logic [N_BITS-1:0]          op1_raw;
+    logic [N_BITS-1:0]          op2_raw;
 
     //////////////////////////////
     //    Pipeline registers    //
@@ -73,9 +79,9 @@ module D_stage (
     // Decode source and destination registers
     // In RISC-V, these are always specified in the same bit positions across
     // all instructions to simplify decode logic.
-    assign rf_wb_ctrl_pkt.rd = instr[11:7];
-    assign rs1 = instr[19:15];
-    assign rs2 = instr[24:20];
+    assign rf_ctrl_pkt.rd = instr[11:7];
+    assign rf_ctrl_pkt.rs1 = instr[19:15];
+    assign rf_ctrl_pkt.rs2 = instr[24:20];
     assign opcode = instr[6:0];
     assign funct3 = instr[14:12];
 
@@ -133,13 +139,13 @@ module D_stage (
     );
 
     // Register file writeback
-    assign rf_wb_ctrl_pkt.wr_en = ( decoded_opcode.LUI |
-                                    decoded_opcode.AUIPC |
-                                    decoded_opcode.JAL |
-                                    decoded_opcode.JALR |
-                                    decoded_opcode.LOAD |
-                                    decoded_opcode.RI |
-                                    decoded_opcode.RR );
+    assign rf_ctrl_pkt.wr_en = (decoded_opcode.LUI |
+                                decoded_opcode.AUIPC |
+                                decoded_opcode.JAL |
+                                decoded_opcode.JALR |
+                                decoded_opcode.LOAD |
+                                decoded_opcode.RI |
+                                decoded_opcode.RR);
 
     // Load/store memory access
     assign dmem_req_ctrl_pkt.vld = (decoded_opcode.LOAD | 
@@ -149,20 +155,62 @@ module D_stage (
                                    (funct3[1:0] == 2'b01) ? 2'd2 : 2'd0;
 
     dl_mux2 #(
-        .NUM_BITS   (32)
+        .NUM_BITS   (N_BITS)
     ) op1_mux (
         .in0    (rs1_data),
         .in1    (pc),
         .sel    (1'b0),
-        .out    (op1)
+        .out    (op1_raw)
     );
 
     dl_mux2 #(
-        .NUM_BITS   (32)
+        .NUM_BITS   (N_BITS)
     ) op2_mux (
         .in0    (rs2_data),
         .in1    (imm),
         .sel    (!(decoded_opcode.RR)),
+        .out    (op2_raw)
+    );
+
+    logic [1:0] op1_bypass_mux_sel;
+    always_comb begin
+        if (rf_ctrl_pkt.rs1 == 5'b0) op1_bypass_mux_sel = 2'b00;
+        else if (X_rf_ctrl_pkt.rs1 == rf_ctrl_pkt.rs1) op1_bypass_mux_sel = 2'b01;
+        else if (M_rf_ctrl_pkt.rs1 == rf_ctrl_pkt.rs1) op1_bypass_mux_sel = 2'b10;
+        else if (W_rf_ctrl_pkt.rs1 == rf_ctrl_pkt.rs1) op1_bypass_mux_sel = 2'b11;
+        else op1_bypass_mux_sel = 2'b00; 
+    end
+
+    // op1 bypass mux
+    dl_mux4 #(
+        .NUM_BITS   (N_BITS)
+    ) op1_bypass_mux (
+        .in0    (op1_raw),
+        .in1    (X_bypass),
+        .in2    (M_bypass),
+        .in3    (W_bypass),
+        .sel    (op1_bypass_mux_sel),
+        .out    (op1)
+    );
+
+    logic [1:0] op2_bypass_mux_sel;
+    always_comb begin
+        if (rf_ctrl_pkt.rs1 == 5'b0) op1_bypass_mux_sel = 2'b00;
+        else if (X_rf_ctrl_pkt.rs2 == rf_ctrl_pkt.rs2) op2_bypass_mux_sel = 2'b01;
+        else if (M_rf_ctrl_pkt.rs2 == rf_ctrl_pkt.rs2) op2_bypass_mux_sel = 2'b10;
+        else if (W_rf_ctrl_pkt.rs2 == rf_ctrl_pkt.rs2) op2_bypass_mux_sel = 2'b11;
+        else op2_bypass_mux_sel = 2'b00; 
+    end
+
+    // op2 bypass mux
+    dl_mux4 #(
+        .NUM_BITS   (N_BITS)
+    ) op2_bypass_mux (
+        .in0    (op2_raw),
+        .in1    (X_bypass),
+        .in2    (M_bypass),
+        .in3    (W_bypass),
+        .sel    (op2_bypass_mux_sel),
         .out    (op2)
     );
 

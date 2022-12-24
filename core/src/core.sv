@@ -41,10 +41,10 @@ module core (
     logic [N_BITS-1:0]          rs1_data;
     logic [N_BITS-1:0]          rs2_data;
     alu_op_t                    alu_op;
-    rf_wb_ctrl_t                rf_wb_ctrl_pkt_D;
-    rf_wb_ctrl_t                rf_wb_ctrl_pkt_X;
-    rf_wb_ctrl_t                rf_wb_ctrl_pkt_M;
-    rf_wb_ctrl_t                rf_wb_ctrl_pkt_W;
+    rf_ctrl_t                   rf_ctrl_pkt_D;
+    rf_ctrl_t                   rf_ctrl_pkt_X;
+    rf_ctrl_t                   rf_ctrl_pkt_M;
+    rf_ctrl_t                   rf_ctrl_pkt_W;
     dmem_req_ctrl_t             dmem_req_ctrl_pkt_D;
     dmem_req_ctrl_t             dmem_req_ctrl_pkt_X;
     logic [N_BITS-1:0]          X_out;
@@ -58,12 +58,12 @@ module core (
     ) rf (
         .clk                    (clk),
         .rst_n                  (rst_n),
-        .rd0_idx                (rs1),
-        .rd1_idx                (rs2),
+        .rd0_idx                (rf_ctrl_pkt_D.rs1),
+        .rd1_idx                (rf_ctrl_pkt_D.rs2),
         .rd0_data               (rs1_data),
         .rd1_data               (rs2_data),
-        .wr_en                  (rf_wb_ctrl_pkt_W.wr_en),
-        .wr_idx                 (rf_wb_ctrl_pkt_W.rd),
+        .wr_en                  (rf_ctrl_pkt_W.wr_en),
+        .wr_idx                 (rf_ctrl_pkt_W.rd),
         .wr_data                (W_out)
     );
 
@@ -85,15 +85,19 @@ module core (
         .pc_in                  (pc),
         .pc_plus4_in            (pc_plus4),
         .pc_plus4_out           (pc_plus4_D),
-        .rs1                    (rs1),
-        .rs2                    (rs2),
         .rs1_data               (rs1_data),
         .rs2_data               (rs2_data),
+        .X_bypass               (X_out),
+        .M_bypass               (M_out),
+        .W_bypass               (W_out),
+        .X_rf_ctrl_pkt          (rf_ctrl_pkt_X),
+        .M_rf_ctrl_pkt          (rf_ctrl_pkt_M),
+        .W_rf_ctrl_pkt          (rf_ctrl_pkt_W),
         .op1                    (op1),
         .op2                    (op2),
         .jal_branch_tgt         (jal_branch_tgt),
         .alu_op                 (alu_op),
-        .rf_wb_ctrl_pkt         (rf_wb_ctrl_pkt_D),
+        .rf_ctrl_pkt            (rf_ctrl_pkt_D),
         .dmem_req_ctrl_pkt      (dmem_req_ctrl_pkt_D)
     );
 
@@ -101,8 +105,8 @@ module core (
         .clk                    (clk),
         .rst_n                  (rst_n),
         .alu_op_nxt             (alu_op),
-        .rf_wb_ctrl_pkt_in      (rf_wb_ctrl_pkt_D),
-        .rf_wb_ctrl_pkt_out     (rf_wb_ctrl_pkt_X),
+        .rf_ctrl_pkt_in         (rf_ctrl_pkt_D),
+        .rf_ctrl_pkt_out        (rf_ctrl_pkt_X),
         .dmem_req_ctrl_pkt_in   (dmem_req_ctrl_pkt_D),
         .dmem_req_ctrl_pkt_out  (dmem_req_ctrl_pkt_X),
         .op1_nxt                (op1),
@@ -118,16 +122,16 @@ module core (
         .rst_n                  (rst_n),
         .exe_data_in            (X_out),
         .mem_rsp_data           (dmem_rsp.data),
-        .rf_wb_ctrl_pkt_in      (rf_wb_ctrl_pkt_X),
-        .rf_wb_ctrl_pkt_out     (rf_wb_ctrl_pkt_M),
+        .rf_ctrl_pkt_in         (rf_ctrl_pkt_X),
+        .rf_ctrl_pkt_out        (rf_ctrl_pkt_M),
         .data_out               (M_out)
     );
 
     W_stage W_stage_inst (
         .clk                    (clk),
         .rst_n                  (rst_n),
-        .rf_wb_ctrl_pkt_in      (rf_wb_ctrl_pkt_M),
-        .rf_wb_ctrl_pkt_out     (rf_wb_ctrl_pkt_W),
+        .rf_ctrl_pkt_in         (rf_ctrl_pkt_M),
+        .rf_ctrl_pkt_out        (rf_ctrl_pkt_W),
         .data_in                (M_out),
         .data_out               (W_out)
     );
