@@ -50,4 +50,13 @@ package riscv_pkg;
         NONE_t  = 3'b111
     } instr_formats_e;
 
+    typedef struct packed {
+        logic   R_type;
+        logic   I_type;
+        logic   S_type;
+        logic   B_type;
+        logic   U_type;
+        logic   J_type;
+    } instr_fmt_1hot_struct_t;
+
 endpackage
