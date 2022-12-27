@@ -14,8 +14,6 @@ module X_stage (
     input  alu_op_t             alu_op_nxt,
     input  rf_ctrl_t            rf_ctrl_pkt_in,
     output rf_ctrl_t            rf_ctrl_pkt_out,
-    input  dmem_req_ctrl_t      dmem_req_ctrl_pkt_in,
-    output dmem_req_ctrl_t      dmem_req_ctrl_pkt_out,
     input  logic [N_BITS-1:0]   op1_nxt,
     input  logic [N_BITS-1:0]   op2_nxt,
     input  logic [N_BITS-1:0]   pc_plus4_in,
@@ -92,16 +90,6 @@ module X_stage (
         .en     (1'b1),
         .d      (rf_ctrl_pkt_in),
         .q      (rf_ctrl_pkt_out)
-    );
-
-    dl_reg_en_rst #(
-        .NUM_BITS   ($bits(dmem_req_ctrl_t))
-    ) dmem_req_ctrl_pkt_reg (
-        .clk    (clk),
-        .rst_n  (rst_n),
-        .en     (1'b1),
-        .d      (dmem_req_ctrl_pkt_in),
-        .q      (dmem_req_ctrl_pkt_out)
     );
 
     // ALU

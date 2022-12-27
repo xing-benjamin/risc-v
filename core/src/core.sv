@@ -10,22 +10,22 @@ import memory_types_pkg::*;
 import core_types_pkg::*;
 
 module core (
-    input  logic        clk,
-    input  logic        rst_n,
+    input  logic                clk,
+    input  logic                rst_n,
     // imem port
-    output logic        imem_req_vld,
-    input  logic        imem_req_rdy,
-    output mem_pkt_t    imem_req,
-    input  logic        imem_rsp_vld,
-    output logic        imem_rsp_rdy,
-    input  mem_pkt_t    imem_rsp,
+    output logic                imem_req_vld,
+    input  logic                imem_req_rdy,
+    output mem_pkt_t            imem_req,
+    input  logic                imem_rsp_vld,
+    output logic                imem_rsp_rdy,
+    input  mem_pkt_t            imem_rsp,
     // dmem port
-    output logic        dmem_req_vld,
-    input  logic        dmem_req_rdy,
-    output mem_pkt_t    dmem_req,
-    input  logic        dmem_rsp_vld,
-    output logic        dmem_rsp_rdy,
-    input  mem_pkt_t    dmem_rsp
+    output logic                dmem_req_vld,
+    input  logic                dmem_req_rdy,
+    output mem_pkt_t            dmem_req,
+    input  logic                dmem_rsp_vld,
+    output logic                dmem_rsp_rdy,
+    input  mem_pkt_t            dmem_rsp
 );
 
     logic [N_BITS-1:0]          pc;
@@ -45,11 +45,14 @@ module core (
     rf_ctrl_t                   rf_ctrl_pkt_X;
     rf_ctrl_t                   rf_ctrl_pkt_M;
     rf_ctrl_t                   rf_ctrl_pkt_W;
-    dmem_req_ctrl_t             dmem_req_ctrl_pkt_D;
-    dmem_req_ctrl_t             dmem_req_ctrl_pkt_X;
+    dmem_req_ctrl_t             dmem_req_ctrl_pkt;
+    logic [N_BITS-1:0]          dmem_store_data;
+    logic                       is_dmem_rd;
     logic [N_BITS-1:0]          X_out;
     logic [N_BITS-1:0]          M_out;
     logic [N_BITS-1:0]          W_out;
+    logic                       F_stall;
+    logic                       D_stall;
 
     // Register file
     regfile #(    
@@ -75,7 +78,9 @@ module core (
         .next_pc                (next_pc),
         .jal_tgt                (jal_branch_tgt),
         .branch_tgt             (branch_tgt),
-        .jalr_tgt               (X_out)
+        .jalr_tgt               (X_out),
+        .stall_in               (D_stall),
+        .stall                  (F_stall)
     );
 
     D_stage D_stage_inst (
@@ -95,12 +100,16 @@ module core (
         .X_rf_ctrl_pkt          (rf_ctrl_pkt_X),
         .M_rf_ctrl_pkt          (rf_ctrl_pkt_M),
         .W_rf_ctrl_pkt          (rf_ctrl_pkt_W),
+        .nxt_stg_is_dmem_rd     (is_dmem_rd),
         .op1                    (op1),
         .op2                    (op2),
         .jal_branch_tgt         (jal_branch_tgt),
         .alu_op                 (alu_op),
         .rf_ctrl_pkt            (rf_ctrl_pkt_D),
-        .dmem_req_ctrl_pkt      (dmem_req_ctrl_pkt_D)
+        .dmem_req_ctrl_pkt      (dmem_req_ctrl_pkt),
+        .dmem_store_data        (dmem_store_data),
+        .stall_in               (1'b0),
+        .stall                  (D_stall)
     );
 
     X_stage X_stage_inst (
@@ -109,8 +118,6 @@ module core (
         .alu_op_nxt             (alu_op),
         .rf_ctrl_pkt_in         (rf_ctrl_pkt_D),
         .rf_ctrl_pkt_out        (rf_ctrl_pkt_X),
-        .dmem_req_ctrl_pkt_in   (dmem_req_ctrl_pkt_D),
-        .dmem_req_ctrl_pkt_out  (dmem_req_ctrl_pkt_X),
         .op1_nxt                (op1),
         .op2_nxt                (op2),
         .pc_plus4_in            (pc_plus4_D),
@@ -124,6 +131,7 @@ module core (
         .rst_n                  (rst_n),
         .exe_data_in            (X_out),
         .mem_rsp_data           (dmem_rsp.data),
+        .is_dmem_rd             (is_dmem_rd),
         .rf_ctrl_pkt_in         (rf_ctrl_pkt_X),
         .rf_ctrl_pkt_out        (rf_ctrl_pkt_M),
         .data_out               (M_out)
@@ -138,24 +146,28 @@ module core (
         .data_out               (W_out)
     );
 
+    lsu lsu_inst (
+        .clk                    (clk),
+        .rst_n                  (rst_n),
+        .dmem_req_ctrl_pkt_in   (dmem_req_ctrl_pkt),
+        .dmem_req_addr          (X_out),
+        .dmem_wr_data_in        (dmem_store_data),
+        .is_dmem_rd             (is_dmem_rd),
+        .dmem_req_out_vld       (dmem_req_vld),
+        .dmem_req_out           (dmem_req)
+    );
+
     ///////////////////////
     // Memory Interfaces //
     ///////////////////////
-    assign imem_req_vld = rst_n;
+    assign imem_req_vld = rst_n && !F_stall;
 
     assign imem_req.mtype = READ;
     assign imem_req.addr = next_pc;
     assign imem_req.len = 2'b0;
     assign imem_req.data = 32'b0;
 
-    assign imem_rsp_rdy = 1'b1;
-
-    assign dmem_req_vld = dmem_req_ctrl_pkt_X.vld;
-
-    assign dmem_req.mtype = dmem_req_ctrl_pkt_X.mtype;
-    assign dmem_req.addr = X_out;
-    assign dmem_req.len = dmem_req_ctrl_pkt_X.len;
-    assign dmem_req.data = rs2_data;
+    assign imem_rsp_rdy = rst_n & !F_stall;
 
     assign dmem_rsp_rdy = 1'b1;
 

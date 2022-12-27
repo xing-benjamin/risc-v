@@ -16,12 +16,15 @@ module F_stage (
     output [N_BITS-1:0] next_pc,
     input  [N_BITS-1:0] jal_tgt,
     input  [N_BITS-1:0] branch_tgt,
-    input  [N_BITS-1:0] jalr_tgt
+    input  [N_BITS-1:0] jalr_tgt,
+    input  logic        stall_in,
+    output logic        stall
 );
 
-    logic        pc_reg_en;
+    logic       pc_reg_en;
+    logic       local_stall;
 
-    assign pc_reg_en = rst_n; // FIXME BEN
+    assign pc_reg_en = rst_n && !stall; // FIXME BEN
 
     // Program counter
     dl_reg_en_rst #(
@@ -48,5 +51,11 @@ module F_stage (
         .sel    (2'b00), // FIXME BEN
         .out    (next_pc)
     );
+
+    ///////////////////////
+    //  Control signals  //
+    ///////////////////////
+    assign local_stall = 1'b0;
+    assign stall = local_stall || stall_in;
 
 endmodule : F_stage

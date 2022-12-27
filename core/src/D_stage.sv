@@ -26,12 +26,16 @@ module D_stage (
     input  rf_ctrl_t                X_rf_ctrl_pkt,
     input  rf_ctrl_t                M_rf_ctrl_pkt,
     input  rf_ctrl_t                W_rf_ctrl_pkt,
+    input  logic                    nxt_stg_is_dmem_rd,
     output logic [N_BITS-1:0]       op1,
     output logic [N_BITS-1:0]       op2,
     output logic [N_BITS-1:0]       jal_branch_tgt,
     output alu_op_t                 alu_op,
     output rf_ctrl_t                rf_ctrl_pkt,
-    output dmem_req_ctrl_t          dmem_req_ctrl_pkt
+    output dmem_req_ctrl_t          dmem_req_ctrl_pkt,
+    output logic [N_BITS-1:0]       dmem_store_data,
+    input  logic                    stall_in,
+    output logic                    stall
 );
 
     logic [N_BITS-1:0]          instr;
@@ -47,6 +51,7 @@ module D_stage (
     logic [N_BITS-1:0]          op2_raw;
     logic                       rs1_vld;
     logic                       rs2_vld;
+    logic                       local_stall;
 
     //////////////////////////////
     //    Pipeline registers    //
@@ -56,7 +61,7 @@ module D_stage (
     ) D_imem_rsp_instr_reg (
         .clk        (clk),
         .rst_n      (rst_n),
-        .en         (1'b1),
+        .en         (!stall),
         .d          (nxt_instr),
         .q          (instr)
     );
@@ -66,7 +71,7 @@ module D_stage (
     ) D_pc_reg (
         .clk        (clk),
         .rst_n      (rst_n),
-        .en         (1'b1),
+        .en         (!stall),
         .d          (pc_in),
         .q          (pc)
     );
@@ -76,7 +81,7 @@ module D_stage (
     ) D_pc_plus_4_reg (
         .clk        (clk),
         .rst_n      (rst_n),
-        .en         (1'b1),
+        .en         (!stall),
         .d          (pc_plus4_in),
         .q          (pc_plus4_out)
     );
@@ -173,48 +178,30 @@ module D_stage (
     assign dmem_req_ctrl_pkt.len = (funct3[1:0] == 2'b00) ? 2'd1 :
                                    (funct3[1:0] == 2'b01) ? 2'd2 : 2'd0;
 
-    dl_mux2 #(
-        .NUM_BITS   (N_BITS)
-    ) op1_mux (
-        .in0    (rs1_data),
-        .in1    (pc),
-        .sel    (1'b0),
-        .out    (op1_raw)
-    );
-
-    dl_mux2 #(
-        .NUM_BITS   (N_BITS)
-    ) op2_mux (
-        .in0    (rs2_data),
-        .in1    (imm),
-        .sel    (!(decoded_opcode.RR)),
-        .out    (op2_raw)
-    );
-
     logic [1:0] op1_bypass_mux_sel;
     always_comb begin
         if (rs1 == 5'b0) op1_bypass_mux_sel = 2'b00;
         else if (X_rf_ctrl_pkt.rd == rs1 && X_rf_ctrl_pkt.vld && rs1_vld) op1_bypass_mux_sel = 2'b01;
         else if (M_rf_ctrl_pkt.rd == rs1 && M_rf_ctrl_pkt.vld && rs1_vld) op1_bypass_mux_sel = 2'b10;
         else if (W_rf_ctrl_pkt.rd == rs1 && W_rf_ctrl_pkt.vld && rs1_vld) op1_bypass_mux_sel = 2'b11;
-        else op1_bypass_mux_sel = 2'b00; 
+        else op1_bypass_mux_sel = 2'b00;
     end
 
     // op1 bypass mux
     dl_mux4 #(
         .NUM_BITS   (N_BITS)
     ) op1_bypass_mux (
-        .in0    (op1_raw),
+        .in0    (rs1_data),
         .in1    (X_bypass),
         .in2    (M_bypass),
         .in3    (W_bypass),
         .sel    (op1_bypass_mux_sel),
-        .out    (op1)
+        .out    (op1_raw)
     );
 
     logic [1:0] op2_bypass_mux_sel;
     always_comb begin
-        if (rs1 == 5'b0) op1_bypass_mux_sel = 2'b00;
+        if (rs2 == 5'b0) op2_bypass_mux_sel = 2'b00;
         else if (X_rf_ctrl_pkt.rd == rs2 && X_rf_ctrl_pkt.vld && rs2_vld) op2_bypass_mux_sel = 2'b01;
         else if (M_rf_ctrl_pkt.rd == rs2 && M_rf_ctrl_pkt.vld && rs2_vld) op2_bypass_mux_sel = 2'b10;
         else if (W_rf_ctrl_pkt.rd == rs2 && W_rf_ctrl_pkt.vld && rs2_vld) op2_bypass_mux_sel = 2'b11;
@@ -225,11 +212,31 @@ module D_stage (
     dl_mux4 #(
         .NUM_BITS   (N_BITS)
     ) op2_bypass_mux (
-        .in0    (op2_raw),
+        .in0    (rs2_data),
         .in1    (X_bypass),
         .in2    (M_bypass),
         .in3    (W_bypass),
         .sel    (op2_bypass_mux_sel),
+        .out    (op2_raw)
+    );
+
+    assign dmem_store_data = op2_raw;
+
+    dl_mux2 #(
+        .NUM_BITS   (N_BITS)
+    ) op1_mux (
+        .in0    (op1_raw),
+        .in1    (pc),
+        .sel    (1'b0),
+        .out    (op1)
+    );
+
+    dl_mux2 #(
+        .NUM_BITS   (N_BITS)
+    ) op2_mux (
+        .in0    (op2_raw),
+        .in1    (imm),
+        .sel    (!(decoded_opcode.RR)),
         .out    (op2)
     );
 
@@ -241,5 +248,13 @@ module D_stage (
         .sum    (jal_branch_tgt),
         .cout   ()
     );
+
+    ///////////////////////
+    //  Control signals  //
+    ///////////////////////
+    assign local_stall = ((rs1_vld && rs1 == X_rf_ctrl_pkt.rd) ||
+                         (rs2_vld && rs2 == X_rf_ctrl_pkt.rd)) && X_rf_ctrl_pkt.vld &&
+                         nxt_stg_is_dmem_rd;
+    assign stall = stall_in || local_stall;
 
 endmodule : D_stage

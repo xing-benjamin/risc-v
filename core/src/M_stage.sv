@@ -13,12 +13,15 @@ module M_stage (
     input                       rst_n,
     input  logic [N_BITS-1:0]   exe_data_in,
     input  logic [N_BITS-1:0]   mem_rsp_data,
+    input  logic                is_dmem_rd,
     input  rf_ctrl_t            rf_ctrl_pkt_in,
     output rf_ctrl_t            rf_ctrl_pkt_out,
     output logic [N_BITS-1:0]   data_out
 );
 
     logic [N_BITS-1:0]  exe_data;
+    dmem_req_ctrl_t     dmem_req_ctrl_pkt;
+    logic               M_out_sel;
 
     //////////////////////////////
     //    Pipeline registers    //
@@ -43,12 +46,22 @@ module M_stage (
         .q          (rf_ctrl_pkt_out)
     );
 
+    dl_reg_en_rst #(
+        .NUM_BITS   (1)
+    ) is_dmem_rd_reg (
+        .clk        (clk),
+        .rst_n      (rst_n),
+        .en         (1'b1),
+        .d          (is_dmem_rd),
+        .q          (M_out_sel)
+    );
+
     dl_mux2 #(
         .NUM_BITS   (N_BITS)
     ) M_out_mux (
         .in0        (exe_data),
         .in1        (mem_rsp_data),
-        .sel        (1'b0),
+        .sel        (M_out_sel),
         .out        (data_out)
     );
 
