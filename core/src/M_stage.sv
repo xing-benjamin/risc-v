@@ -16,12 +16,15 @@ module M_stage (
     input  logic                is_dmem_rd,
     input  rf_ctrl_t            rf_ctrl_pkt_in,
     output rf_ctrl_t            rf_ctrl_pkt_out,
-    output logic [N_BITS-1:0]   data_out
+    output logic [N_BITS-1:0]   data_out,
+    input  logic                stall_in,
+    output logic                stall
 );
 
     logic [N_BITS-1:0]  exe_data;
     dmem_req_ctrl_t     dmem_req_ctrl_pkt;
     logic               M_out_sel;
+    logic               local_stall;
 
     //////////////////////////////
     //    Pipeline registers    //
@@ -64,5 +67,11 @@ module M_stage (
         .sel        (M_out_sel),
         .out        (data_out)
     );
+
+    ///////////////////////
+    //  Control signals  //
+    ///////////////////////
+    assign stall = stall_in || local_stall;
+    assign local_stall = 1'b0;
 
 endmodule : M_stage

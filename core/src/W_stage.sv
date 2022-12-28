@@ -14,7 +14,8 @@ module W_stage (
     input  rf_ctrl_t            rf_ctrl_pkt_in,
     output rf_ctrl_t            rf_ctrl_pkt_out,
     input  logic [N_BITS-1:0]   data_in,
-    output logic [N_BITS-1:0]   data_out
+    output logic [N_BITS-1:0]   data_out,
+    output logic                stall
 );
 
     //////////////////////////////
@@ -39,5 +40,7 @@ module W_stage (
         .d          (rf_ctrl_pkt_in),
         .q          (rf_ctrl_pkt_out)
     );
+
+    assign stall = 1'b0;
 
 endmodule : W_stage

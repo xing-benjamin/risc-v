@@ -53,6 +53,9 @@ module core (
     logic [N_BITS-1:0]          W_out;
     logic                       F_stall;
     logic                       D_stall;
+    logic                       X_stall;
+    logic                       M_stall;
+    logic                       W_stall;
 
     // Register file
     regfile #(    
@@ -108,7 +111,7 @@ module core (
         .rf_ctrl_pkt            (rf_ctrl_pkt_D),
         .dmem_req_ctrl_pkt      (dmem_req_ctrl_pkt),
         .dmem_store_data        (dmem_store_data),
-        .stall_in               (1'b0),
+        .stall_in               (X_stall),
         .stall                  (D_stall)
     );
 
@@ -123,7 +126,9 @@ module core (
         .pc_plus4_in            (pc_plus4_D),
         .branch_tgt_in          (jal_branch_tgt),
         .branch_tgt             (branch_tgt),
-        .data_out               (X_out)
+        .data_out               (X_out),
+        .stall_in               (M_stall),
+        .stall                  (X_stall)
     );
 
     M_stage M_stage_inst (
@@ -134,7 +139,9 @@ module core (
         .is_dmem_rd             (is_dmem_rd),
         .rf_ctrl_pkt_in         (rf_ctrl_pkt_X),
         .rf_ctrl_pkt_out        (rf_ctrl_pkt_M),
-        .data_out               (M_out)
+        .data_out               (M_out),
+        .stall_in               (W_stall),
+        .stall                  (M_stall)
     );
 
     W_stage W_stage_inst (
@@ -143,7 +150,8 @@ module core (
         .rf_ctrl_pkt_in         (rf_ctrl_pkt_M),
         .rf_ctrl_pkt_out        (rf_ctrl_pkt_W),
         .data_in                (M_out),
-        .data_out               (W_out)
+        .data_out               (W_out),
+        .stall                  (W_stall)
     );
 
     lsu lsu_inst (

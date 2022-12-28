@@ -19,7 +19,9 @@ module X_stage (
     input  logic [N_BITS-1:0]   pc_plus4_in,
     input  logic [N_BITS-1:0]   branch_tgt_in,
     output logic [N_BITS-1:0]   branch_tgt,
-    output logic [N_BITS-1:0]   data_out
+    output logic [N_BITS-1:0]   data_out,
+    input  logic                stall_in,
+    output logic                stall
 );
 
     logic [N_BITS-1:0]      pc_plus4;
@@ -28,6 +30,7 @@ module X_stage (
     alu_op_t                alu_op;
 
     logic [N_BITS-1:0]      alu_out;
+    logic                   local_stall;
 
     //////////////////////////////
     //    Pipeline registers    //
@@ -110,5 +113,11 @@ module X_stage (
         .sel    (1'b0),
         .out    (data_out)
     );
+
+    ///////////////////////
+    //  Control signals  //
+    ///////////////////////
+    assign stall = stall_in || local_stall;
+    assign local_stall = 1'b0;
 
 endmodule : X_stage
