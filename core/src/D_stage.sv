@@ -187,6 +187,9 @@ module D_stage (
         else op1_bypass_mux_sel = 2'b00;
     end
 
+    logic [N_BITS-1:0]  U_instr_op1;
+    assign U_instr_op1 = (decoded_opcode.AUIPC) ? pc : 32'b0;
+
     // op1 bypass mux
     dl_mux4 #(
         .NUM_BITS   (N_BITS)
@@ -226,8 +229,8 @@ module D_stage (
         .NUM_BITS   (N_BITS)
     ) op1_mux (
         .in0    (op1_raw),
-        .in1    (pc),
-        .sel    (1'b0),
+        .in1    (U_instr_op1),
+        .sel    (decoded_instr_fmt.U_type),
         .out    (op1)
     );
 
