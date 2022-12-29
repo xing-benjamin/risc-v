@@ -3,13 +3,18 @@
 import sys
 import os
 import math
+import argparse
 
-path = sys.argv[1]
-modulename = sys.argv[2]
-numInputs = sys.argv[3]
+dl_path = os.environ.get('DESIGN_LIB')
+path = dl_path + '/lib'
 
+parser = argparse.ArgumentParser(description='Generate N-to-1 mux')
+parser.add_argument('numInputs', help='Number of inputs')
+args = parser.parse_args()
+
+numInputs = int(args.numInputs)
+modulename = 'dl_mux{0}'.format(numInputs)
 filename = modulename + '.v'
-numInputs = int(numInputs)
 
 fh = open(os.path.join(path, filename), 'w')
 fh.writelines([
