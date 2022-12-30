@@ -14,7 +14,7 @@ module dl_decoder_5p32p #(
     localparam INPUT_WIDTH = $clog2(OUTPUT_WIDTH)
 )(
     input  logic [INPUT_WIDTH-1:0]  in,
-    output logic [OUTPUT_WIDTH-1:0]  out
+    output logic [OUTPUT_WIDTH-1:0] out
 );
 
     always_comb begin
