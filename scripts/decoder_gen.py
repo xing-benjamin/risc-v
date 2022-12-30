@@ -5,17 +5,24 @@ import os
 import math
 import argparse
 
-#parser = argparse.ArgumentParser()
-#parser.add_argument('-d', '--dir')
-#parser.parse_args()
+dl_path = os.environ.get('DESIGN_LIB')
+path = dl_path + '/lib'
 
-path = sys.argv[1]
-modulename = sys.argv[2]
-outputWidth = sys.argv[3]
+parser = argparse.ArgumentParser()
+parser.add_argument('outputWidth', help='Output bitwidth')
+parser.add_argument('-io', help='Input and output port formatting (packed or unpacked)', 
+                    default='pp', choices=['pp', 'pu', 'up', 'uu'])
+args = parser.parse_args()
 
-filename = modulename + '.v'
-outputWidth = int(outputWidth)
+outputWidth = int(args.outputWidth)
 inputWidth = math.ceil(math.log2(outputWidth))
+
+input_fmt = args.io[0]
+output_fmt = args.io[1]
+
+modulename = 'dl_decoder_{0}{1}{2}{3}'.format(inputWidth, input_fmt, outputWidth, output_fmt)
+
+filename = modulename + '.sv'
 
 fh = open(os.path.join(path, filename), 'w')
 fh.writelines([
@@ -27,8 +34,8 @@ fh.writelines([
     '//--------------------------------------------------------------\n\n'
     ])
 fh.writelines([
-    '`ifndef __' + modulename.upper() + '_V__\n',
-    '`define __' + modulename.upper() + '_V__\n\n'
+    '`ifndef __' + modulename.upper() + '_SV__\n',
+    '`define __' + modulename.upper() + '_SV__\n\n'
     ])
 fh.writelines([
     'module ' + modulename + ' #(\n',
@@ -37,31 +44,52 @@ fh.writelines([
     ')(\n'
     ])
 
-fh.write('    input  logic [INPUT_WIDTH-1:0]  in,\n')
+if input_fmt == 'p':
+    fh.write('    input  logic [INPUT_WIDTH-1:0]  in,\n')
+elif input_fmt == 'u':
+    for i in range(inputWidth):
+        fh.write('    input  logic                    in{0},\n'.format(i))
 
-#for i in range(outputWidth):
-#    if (i < outputWidth-1):
-#        fh.write('    output logic                    out' + str(i) + ',\n')
-#    else:
-#        fh.write('    output logic                    out' + str(i) + '\n')
-fh.write('    output logic [OUTPUT_WIDTH-1:0]  out\n')
+if output_fmt == 'p':
+    fh.write('    output logic [OUTPUT_WIDTH-1:0] out\n')
+elif output_fmt == 'u':
+    for o in range(outputWidth-1):
+        fh.write('    output logic                    out{0},\n'.format(o))
+    fh.write('    output logic                    out{0}\n'.format(outputWidth-1))
 
 fh.write(');\n\n'),
-fh.write('    always_comb begin\n')
 
-#for in_val in range(outputWidth):
-#    fh.write('        out{} = 1\'b0;\n'.format(in_val))
-fh.write('        out = \'0;\n')
-fh.write('        case (in)\n')
+if input_fmt == 'u':
+    fh.write('    logic [INPUT_WIDTH-1:0]  in;\n')
+    fh.write('    assign in = {')
+    for i in range(inputWidth-1):
+        fh.write('in{0}, '.format(i))
+    fh.write('in{0}}};\n\n'.format(inputWidth-1))
+if output_fmt == 'u':
+    fh.write('    logic [OUTPUT_WIDTH-1:0] out;\n\n')
+
+fh.writelines([
+    '    always_comb begin\n',
+    '        out = \'0;\n',
+    '        case (in)\n'
+])
 
 for in_val in range(outputWidth):
     fh.write('            {}\'d{}:   out[{}] = 1\'b1;\n'.format(inputWidth, in_val, in_val))
 
 fh.writelines([
     '        endcase\n',
-    '    end\n',
+    '    end\n\n',
+])
+
+if output_fmt == 'u':
+    for o in range(outputWidth):
+        fh.write('    assign out{0} = out[{0}];\n'.format(o))
+    fh.write('\n')
+
+fh.writelines([
     'endmodule\n\n',
-    '`endif // __' + modulename.upper() + '_V__\n'
+    '`endif // __' + modulename.upper() + '_SV__\n'
 ])
 
 fh.close()
