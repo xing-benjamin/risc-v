@@ -6,7 +6,7 @@ import math
 import argparse
 
 dl_path = os.environ.get('DESIGN_LIB')
-path = dl_path + '/lib'
+path = dl_path + '/lib/pri_encoder'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('inputWidth', help='Input bitwidth')
@@ -37,8 +37,8 @@ fh.writelines([
     ])
 fh.writelines([
     'module ' + modulename + ' #(\n',
-    '    localparam OUTPUT_WIDTH = {},\n'.format(outputWidth),
-    '    localparam INPUT_WIDTH = $clog2(OUTPUT_WIDTH)\n',
+    '    localparam INPUT_WIDTH = {},\n'.format(inputWidth),
+    '    localparam OUTPUT_WIDTH = $clog2(INPUT_WIDTH)\n',
     ')(\n'
     ])
 

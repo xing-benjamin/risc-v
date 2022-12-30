@@ -37,8 +37,8 @@ fh.writelines([
     ])
 fh.writelines([
     'module ' + modulename + ' #(\n',
-    '    localparam OUTPUT_WIDTH = {},\n'.format(outputWidth),
-    '    localparam INPUT_WIDTH = $clog2(OUTPUT_WIDTH)\n',
+    '    localparam INPUT_WIDTH = {},\n'.format(inputWidth),
+    '    localparam OUTPUT_WIDTH = $clog2(INPUT_WIDTH)\n',
     ')(\n'
     ])
 

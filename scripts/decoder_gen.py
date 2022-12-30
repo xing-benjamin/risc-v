@@ -6,7 +6,7 @@ import math
 import argparse
 
 dl_path = os.environ.get('DESIGN_LIB')
-path = dl_path + '/lib'
+path = dl_path + '/lib/decoder'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('outputWidth', help='Output bitwidth')
