@@ -1,13 +1,13 @@
 //--------------------------------------------------------------
 /*
-   Filename: dl_mux2.v
+   Filename: dl_mux2.sv
 
    Parameterized 2-to-1 multiplexer implementation
 */
 //--------------------------------------------------------------
 
-`ifndef __DL_MUX2_V__
-`define __DL_MUX2_V__
+`ifndef __DL_MUX2_SV__
+`define __DL_MUX2_SV__
 
 module dl_mux2 #(
     parameter NUM_BITS = 32
@@ -22,9 +22,9 @@ module dl_mux2 #(
         case (sel)
             1'd0:   out = in0;
             1'd1:   out = in1;
-            default: out = 'x;
+            default: out = in0;
         endcase
     end
 endmodule
 
-`endif // __DL_MUX2_V__
+`endif // __DL_MUX2_SV__

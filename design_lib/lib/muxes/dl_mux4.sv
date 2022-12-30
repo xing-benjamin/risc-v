@@ -1,13 +1,13 @@
 //--------------------------------------------------------------
 /*
-   Filename: dl_mux4.v
+   Filename: dl_mux4.sv
 
    Parameterized 4-to-1 multiplexer implementation
 */
 //--------------------------------------------------------------
 
-`ifndef __DL_MUX4_V__
-`define __DL_MUX4_V__
+`ifndef __DL_MUX4_SV__
+`define __DL_MUX4_SV__
 
 module dl_mux4 #(
     parameter NUM_BITS = 32
@@ -26,9 +26,9 @@ module dl_mux4 #(
             2'd1:   out = in1;
             2'd2:   out = in2;
             2'd3:   out = in3;
-            default: out = 'x;
+            default: out = in0;
         endcase
     end
 endmodule
 
-`endif // __DL_MUX4_V__
+`endif // __DL_MUX4_SV__

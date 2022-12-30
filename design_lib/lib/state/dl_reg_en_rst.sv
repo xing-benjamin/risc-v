@@ -1,20 +1,22 @@
 //--------------------------------------------------------------
 /*  
-    Filename: dl_reg_rst.v
+    Filename: dl_reg_en_rst.sv
 
-    Paramterized register implementation w/ synchronous reset.
+    Paramterized register implementation w/ enable and
+    synchronous reset.
 */
 //--------------------------------------------------------------
 
-`ifndef __DL_REG_RST_V__
-`define __DL_REG_RST_V__
+`ifndef __DL_REG_EN_RST_SV__
+`define __DL_REG_EN_RST_SV__
 
-module dl_reg_rst #(
+module dl_reg_en_rst #(
     parameter   NUM_BITS = 32,
     parameter   RST_VAL = 0
 )(
     input  logic                clk,
     input  logic                rst_n,
+    input  logic                en,
     input  logic [NUM_BITS-1:0] d,
     output logic [NUM_BITS-1:0] q
 );
@@ -23,10 +25,12 @@ module dl_reg_rst #(
         if (!rst_n) begin
             q <= RST_VAL;
         end else begin
-            q <= d;
+            if (en) begin
+                q <= d;
+            end
         end
     end
 
 endmodule
 
-`endif // __DL_REG_RST_V__
+`endif // __DL_REG_EN_RST_SV__

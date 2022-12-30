@@ -1,13 +1,13 @@
 //--------------------------------------------------------------
 /*
-   Filename: dl_mux32.v
+   Filename: dl_mux32.sv
 
    Parameterized 32-to-1 multiplexer implementation
 */
 //--------------------------------------------------------------
 
-`ifndef __DL_MUX32_V__
-`define __DL_MUX32_V__
+`ifndef __DL_MUX32_SV__
+`define __DL_MUX32_SV__
 
 module dl_mux32 #(
     parameter NUM_BITS = 32
@@ -82,10 +82,9 @@ module dl_mux32 #(
             5'd29:   out = in29;
             5'd30:   out = in30;
             5'd31:   out = in31;
-            default: out = 'x;
+            default: out = in0;
         endcase
     end
 endmodule
 
-`endif // __DL_MUX32_V__
-
+`endif // __DL_MUX32_SV__

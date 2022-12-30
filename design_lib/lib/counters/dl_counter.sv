@@ -1,14 +1,14 @@
 //--------------------------------------------------------------
 /*  
-    Filename: dl_counter.v
+    Filename: dl_counter.sv
 
     Paramterized incrementing counter implementation with a max value.
     Includes done bit.
 */
 //--------------------------------------------------------------
 
-`ifndef __DL_COUNTER_V__
-`define __DL_COUNTER_V__
+`ifndef __DL_COUNTER_SV__
+`define __DL_COUNTER_SV__
 
 module dl_counter #(
     parameter   NUM_BITS = 4, 
@@ -37,4 +37,4 @@ module dl_counter #(
     end
 endmodule
 
-`endif // __DL_COUNTER_V__
+`endif // __DL_COUNTER_SV__

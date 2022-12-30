@@ -1,0 +1,11 @@
+# Design Library command file
+
++libext+.v+.sv
+-y $(DESIGN_LIB)/lib/adders
+-y $(DESIGN_LIB)/lib/bitwise
+-y $(DESIGN_LIB)/lib/counters
+-y $(DESIGN_LIB)/lib/decoders
+-y $(DESIGN_LIB)/lib/muxes
+-y $(DESIGN_LIB)/lib/pri_encoders
+-y $(DESIGN_LIB)/lib/shifters
+-y $(DESIGN_LIB)/lib/state

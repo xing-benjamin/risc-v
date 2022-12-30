@@ -1,13 +1,13 @@
 //--------------------------------------------------------------
 /*  
-    Filename: dl_rshift_a.v
+    Filename: dl_rshift_a.sv
 
     Paramterized right arithmetic shifter implementation.
 */
 //--------------------------------------------------------------
 
-`ifndef __DL_RSHIFT_A_V__
-`define __DL_RSHIFT_A_V__
+`ifndef __DL_RSHIFT_A_SV__
+`define __DL_RSHIFT_A_SV__
 
 module dl_rshift_a #(
     parameter   NUM_BITS = 32,
@@ -37,4 +37,4 @@ module dl_rshift_a #(
 
 endmodule
 
-`endif // __DL_RSHIFT_A_V__
+`endif // __DL_RSHIFT_A_SV__

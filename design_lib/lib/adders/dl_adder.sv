@@ -1,14 +1,14 @@
 //--------------------------------------------------------------
 /*  
-    Filename: dl_adder.v
+    Filename: dl_adder.sv
 
     Paramterized adder implementation.
     Includes overflow bit.
 */
 //--------------------------------------------------------------
 
-`ifndef __DL_ADDER_V__
-`define __DL_ADDER_V__
+`ifndef __DL_ADDER_SV__
+`define __DL_ADDER_SV__
 
 module dl_adder #(
     parameter   NUM_BITS = 1
@@ -28,4 +28,4 @@ module dl_adder #(
 
 endmodule
 
-`endif // __DL_ADDER_V__
+`endif // __DL_ADDER_SV__

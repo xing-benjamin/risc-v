@@ -1,14 +1,14 @@
 //--------------------------------------------------------------
 /*  
-    Filename: dl_rshift.v
+    Filename: dl_rshift.sv
 
     Paramterized right shifter implementation.
     Produces logical or arithmetic shift based on input 'sh_type'
 */
 //--------------------------------------------------------------
 
-`ifndef __DL_RSHIFT_V__
-`define __DL_RSHIFT_V__
+`ifndef __DL_RSHIFT_SV__
+`define __DL_RSHIFT_SV__
 
 module dl_rshift #(
     parameter   NUM_BITS = 32,
@@ -41,4 +41,4 @@ module dl_rshift #(
 
 endmodule
 
-`endif // __DL_RSHIFT_V__
+`endif // __DL_RSHIFT_SV__

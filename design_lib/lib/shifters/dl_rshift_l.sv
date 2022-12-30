@@ -1,13 +1,13 @@
 //--------------------------------------------------------------
 /*  
-    Filename: dl_rshift_l.v
+    Filename: dl_rshift_l.sv
 
     Paramterized right logical shifter implementation.
 */
 //--------------------------------------------------------------
 
-`ifndef __DL_RSHIFT_L_V__
-`define __DL_RSHIFT_L_V__
+`ifndef __DL_RSHIFT_L_SV__
+`define __DL_RSHIFT_L_SV__
 
 module dl_rshift_l #(
     parameter   NUM_BITS = 32,
@@ -22,4 +22,4 @@ module dl_rshift_l #(
     
 endmodule
 
-`endif // __DL_RSHIFT_L_V__
+`endif // __DL_RSHIFT_L_SV__

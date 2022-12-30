@@ -1,13 +1,13 @@
 //--------------------------------------------------------------
 /*  
-    Filename: dl_dff.v
+    Filename: dl_dff.sv
 
     D flip-flop implementation.
 */
 //--------------------------------------------------------------
 
-`ifndef __DL_DFF_V__
-`define __DL_DFF_V__
+`ifndef __DL_DFF_SV__
+`define __DL_DFF_SV__
 
 module dl_dff (
     input   logic   clk,
@@ -21,4 +21,4 @@ module dl_dff (
 
 endmodule
 
-`endif // __DL_DFF_V__
+`endif // __DL_DFF_SV__

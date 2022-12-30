@@ -1,13 +1,13 @@
 //--------------------------------------------------------------
 /*
-   Filename: dl_mux3.v
+   Filename: dl_mux3.sv
 
    Parameterized 3-to-1 multiplexer implementation
 */
 //--------------------------------------------------------------
 
-`ifndef __DL_MUX3_V__
-`define __DL_MUX3_V__
+`ifndef __DL_MUX3_SV__
+`define __DL_MUX3_SV__
 
 module dl_mux3 #(
     parameter NUM_BITS = 32
@@ -24,9 +24,9 @@ module dl_mux3 #(
             2'd0:   out = in0;
             2'd1:   out = in1;
             2'd2:   out = in2;
-            default: out = 'x;
+            default: out = in0;
         endcase
     end
 endmodule
 
-`endif // __DL_MUX3_V__
+`endif // __DL_MUX3_SV__

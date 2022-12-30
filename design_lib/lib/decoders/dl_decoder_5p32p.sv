@@ -1,13 +1,13 @@
 //--------------------------------------------------------------
 /*
-   Filename: dl_decoder_5p32p.v
+   Filename: dl_decoder_5p32p.sv
 
    Parameterized 5-to-32 decoder implementation
 */
 //--------------------------------------------------------------
 
-`ifndef __DL_DECODER_5P32P_V__
-`define __DL_DECODER_5P32P_V__
+`ifndef __DL_DECODER_5P32P_SV__
+`define __DL_DECODER_5P32P_SV__
 
 module dl_decoder_5p32p #(
     localparam OUTPUT_WIDTH = 32,
@@ -18,7 +18,7 @@ module dl_decoder_5p32p #(
 );
 
     always_comb begin
-        out = '0;
+        out = 32'b0;
         case (in)
             5'd0:   out[0] = 1'b1;
             5'd1:   out[1] = 1'b1;
@@ -54,6 +54,7 @@ module dl_decoder_5p32p #(
             5'd31:   out[31] = 1'b1;
         endcase
     end
+
 endmodule
 
-`endif // __DL_DECODER_5P32P_V__
+`endif // __DL_DECODER_5P32P_SV__

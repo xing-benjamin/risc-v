@@ -1,13 +1,13 @@
 //--------------------------------------------------------------
 /*  
-    Filename: dl_lshift.v
+    Filename: dl_lshift.sv
 
     Paramterized left shifter implementation.
 */
 //--------------------------------------------------------------
 
-`ifndef __DL_LSHIFT_V__
-`define __DL_LSHIFT_V__
+`ifndef __DL_LSHIFT_SV__
+`define __DL_LSHIFT_SV__
 
 module dl_lshift #(
     parameter   NUM_BITS = 32,
@@ -22,4 +22,4 @@ module dl_lshift #(
 
 endmodule
 
-`endif // __DL_LSHIFT_V__
+`endif // __DL_LSHIFT_SV__

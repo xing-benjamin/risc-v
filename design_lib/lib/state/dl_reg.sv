@@ -1,29 +1,26 @@
 //--------------------------------------------------------------
 /*  
-    Filename: dl_reg_en.v
+    Filename: dl_reg.sv
 
-    Paramterized register implementation w/ enable.
+    Paramterized register implementation.
 */
 //--------------------------------------------------------------
 
-`ifndef __DL_REG_EN_V__
-`define __DL_REG_EN_V__
+`ifndef __DL_REG_SV__
+`define __DL_REG_SV__
 
-module dl_reg_en #(
-    parameter   NUM_BITS = 32
+module dl_reg #(
+    parameter   NUM_BITS = 1
 )(
     input  logic                clk,
-    input  logic                en,
     input  logic [NUM_BITS-1:0] d,
     output logic [NUM_BITS-1:0] q
 );
 
     always @(posedge clk) begin
-        if (en) begin
-            q <= d;
-        end
+        q <= d;
     end
 
 endmodule
 
-`endif // __DL_REG_EN_V__
+`endif // __DL_REG_SV__
