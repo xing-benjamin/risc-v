@@ -30,32 +30,50 @@ module D_stage (
     output logic [N_BITS-1:0]       op1,
     output logic [N_BITS-1:0]       op2,
     output logic [N_BITS-1:0]       jal_branch_tgt,
+    output logic                    jal_vld,
+    output ctrl_transfer_t          ctrl_transfer_pkt,
     output alu_op_t                 alu_op,
     output rf_ctrl_t                rf_ctrl_pkt,
     output dmem_req_ctrl_t          dmem_req_ctrl_pkt,
     output logic [N_BITS-1:0]       dmem_store_data,
+    input  logic                    vld_in,
+    output logic                    vld,
     input  logic                    stall_in,
-    output logic                    stall
+    output logic                    stall,
+    input  logic                    squash_in,
+    output logic                    squash
 );
 
-    logic [N_BITS-1:0]          instr;
-    logic [N_BITS-1:0]          pc;
-    logic [OPCODE_LEN-1:0]      opcode;
-    logic [FUNCT3_LEN-1:0]      funct3;
-    logic [2:0]                 instr_format;
-    logic [N_BITS-1:0]          imm;
-    alu_op_t                    comp_inst_alu_op;
-    opcode_1hot_struct_t        decoded_opcode;
-    instr_fmt_1hot_struct_t     decoded_instr_fmt;
-    logic [N_BITS-1:0]          op1_raw;
-    logic [N_BITS-1:0]          op2_raw;
-    logic                       rs1_vld;
-    logic                       rs2_vld;
-    logic                       local_stall;
+    logic [N_BITS-1:0]              instr;
+    logic [N_BITS-1:0]              pc;
+    logic [OPCODE_LEN-1:0]          opcode;
+    logic [FUNCT3_LEN-1:0]          funct3;
+    logic [2:0]                     instr_format;
+    logic [N_BITS-1:0]              imm;
+    alu_op_t                        comp_inst_alu_op;
+    opcode_1hot_struct_t            decoded_opcode;
+    instr_fmt_1hot_struct_t         decoded_instr_fmt;
+    logic [N_BITS-1:0]              op1_raw;
+    logic [N_BITS-1:0]              op2_raw;
+    logic                           rs1_vld;
+    logic                           rs2_vld;
+    logic                           gen_stall;
+    logic                           gen_squash;
+    logic                           vld_raw;
 
     //////////////////////////////
     //    Pipeline registers    //
     //////////////////////////////
+    dl_reg_en_rst #(
+        .NUM_BITS   (1)
+    ) D_stage_vld_reg (
+        .clk        (clk),
+        .rst_n      (rst_n),
+        .en         (!stall),
+        .d          (vld_in),
+        .q          (vld_raw)
+    );
+
     dl_reg_en_rst #(
         .NUM_BITS   (N_BITS)
     ) D_imem_rsp_instr_reg (
@@ -156,11 +174,17 @@ module D_stage (
         .out    (alu_op)
     );
 
+    assign jal_vld = vld && decoded_opcode.JAL;
+
+    assign ctrl_transfer_pkt.is_jal = decoded_opcode.JAL;
+    assign ctrl_transfer_pkt.is_jalr = decoded_opcode.JALR;
+    assign ctrl_transfer_pkt.is_branch = decoded_opcode.BRANCH;
+
     // Register file writeback
-    assign rf_ctrl_pkt.vld = (decoded_instr_fmt.R_type |
-                              decoded_instr_fmt.I_type |
-                              decoded_instr_fmt.U_type |
-                              decoded_instr_fmt.J_type);
+    assign rf_ctrl_pkt.wr_en = (decoded_instr_fmt.R_type |
+                                decoded_instr_fmt.I_type |
+                                decoded_instr_fmt.U_type |
+                                decoded_instr_fmt.J_type);
 
     assign rs1_vld = (decoded_instr_fmt.R_type |
                       decoded_instr_fmt.I_type |
@@ -181,9 +205,9 @@ module D_stage (
     logic [1:0] op1_bypass_mux_sel;
     always_comb begin
         if (rs1 == 5'b0) op1_bypass_mux_sel = 2'b00;
-        else if (X_rf_ctrl_pkt.rd == rs1 && X_rf_ctrl_pkt.vld && rs1_vld) op1_bypass_mux_sel = 2'b01;
-        else if (M_rf_ctrl_pkt.rd == rs1 && M_rf_ctrl_pkt.vld && rs1_vld) op1_bypass_mux_sel = 2'b10;
-        else if (W_rf_ctrl_pkt.rd == rs1 && W_rf_ctrl_pkt.vld && rs1_vld) op1_bypass_mux_sel = 2'b11;
+        else if (X_rf_ctrl_pkt.rd == rs1 && X_rf_ctrl_pkt.wr_en && rs1_vld) op1_bypass_mux_sel = 2'b01;
+        else if (M_rf_ctrl_pkt.rd == rs1 && M_rf_ctrl_pkt.wr_en && rs1_vld) op1_bypass_mux_sel = 2'b10;
+        else if (W_rf_ctrl_pkt.rd == rs1 && W_rf_ctrl_pkt.wr_en && rs1_vld) op1_bypass_mux_sel = 2'b11;
         else op1_bypass_mux_sel = 2'b00;
     end
 
@@ -205,9 +229,9 @@ module D_stage (
     logic [1:0] op2_bypass_mux_sel;
     always_comb begin
         if (rs2 == 5'b0) op2_bypass_mux_sel = 2'b00;
-        else if (X_rf_ctrl_pkt.rd == rs2 && X_rf_ctrl_pkt.vld && rs2_vld) op2_bypass_mux_sel = 2'b01;
-        else if (M_rf_ctrl_pkt.rd == rs2 && M_rf_ctrl_pkt.vld && rs2_vld) op2_bypass_mux_sel = 2'b10;
-        else if (W_rf_ctrl_pkt.rd == rs2 && W_rf_ctrl_pkt.vld && rs2_vld) op2_bypass_mux_sel = 2'b11;
+        else if (X_rf_ctrl_pkt.rd == rs2 && X_rf_ctrl_pkt.wr_en && rs2_vld) op2_bypass_mux_sel = 2'b01;
+        else if (M_rf_ctrl_pkt.rd == rs2 && M_rf_ctrl_pkt.wr_en && rs2_vld) op2_bypass_mux_sel = 2'b10;
+        else if (W_rf_ctrl_pkt.rd == rs2 && W_rf_ctrl_pkt.wr_en && rs2_vld) op2_bypass_mux_sel = 2'b11;
         else op2_bypass_mux_sel = 2'b00; 
     end
 
@@ -255,9 +279,14 @@ module D_stage (
     ///////////////////////
     //  Control signals  //
     ///////////////////////
-    assign local_stall = ((rs1_vld && rs1 == X_rf_ctrl_pkt.rd) ||
-                         (rs2_vld && rs2 == X_rf_ctrl_pkt.rd)) && X_rf_ctrl_pkt.vld &&
-                         nxt_stg_is_dmem_rd;
-    assign stall = stall_in || local_stall;
+    assign gen_stall = vld && /*X_vld &&*/ ((rs1_vld && rs1 == X_rf_ctrl_pkt.rd) ||
+                        (rs2_vld && rs2 == X_rf_ctrl_pkt.rd)) && X_rf_ctrl_pkt.wr_en &&
+                        nxt_stg_is_dmem_rd;
+    assign stall = stall_in || gen_stall;
+
+    assign gen_squash = jal_vld;
+    assign squash = squash_in || gen_squash;
+
+    assign vld = vld_raw && !gen_stall && !squash_in;
 
 endmodule : D_stage

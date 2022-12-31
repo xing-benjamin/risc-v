@@ -37,7 +37,12 @@ module core (
     logic [N_BITS-1:0]          op1;
     logic [N_BITS-1:0]          op2;
     logic [N_BITS-1:0]          jal_branch_tgt;
+    logic                       jal_vld;
     logic [N_BITS-1:0]          branch_tgt;
+    logic                       branch_vld;
+    logic                       jalr_vld;
+    ctrl_transfer_t             ctrl_transfer_pkt;
+    logic [N_BITS-1:0]          jalr_tgt;
     logic [N_BITS-1:0]          rs1_data;
     logic [N_BITS-1:0]          rs2_data;
     alu_op_t                    alu_op;
@@ -51,11 +56,21 @@ module core (
     logic [N_BITS-1:0]          X_out;
     logic [N_BITS-1:0]          M_out;
     logic [N_BITS-1:0]          W_out;
+    logic                       F_vld;
+    logic                       D_vld;
+    logic                       X_vld;
+    logic                       M_vld;
+    logic                       W_vld;
     logic                       F_stall;
     logic                       D_stall;
     logic                       X_stall;
     logic                       M_stall;
     logic                       W_stall;
+    logic                       F_squash;
+    logic                       D_squash;
+    logic                       X_squash;
+    logic                       M_squash;
+    logic                       W_squash;
 
     // Register file
     regfile #(    
@@ -68,7 +83,7 @@ module core (
         .rd1_idx                (rs2),
         .rd0_data               (rs1_data),
         .rd1_data               (rs2_data),
-        .wr_en                  (rf_ctrl_pkt_W.vld),
+        .wr_en                  (W_vld && rf_ctrl_pkt_W.wr_en),
         .wr_idx                 (rf_ctrl_pkt_W.rd),
         .wr_data                (W_out)
     );
@@ -80,10 +95,17 @@ module core (
         .pc_plus4               (pc_plus4),
         .next_pc                (next_pc),
         .jal_tgt                (jal_branch_tgt),
+        .jal_vld                (jal_vld),
         .branch_tgt             (branch_tgt),
-        .jalr_tgt               (X_out),
+        .branch_vld             (branch_vld),
+        .jalr_tgt               (jalr_tgt),
+        .jalr_vld               (jalr_vld),
+        .vld_in                 (1'b1), // FIXME BEN - check if this is correct
+        .vld                    (F_vld),
         .stall_in               (D_stall),
-        .stall                  (F_stall)
+        .stall                  (F_stall),
+        .squash_in              (D_squash),
+        .squash                 ()
     );
 
     D_stage D_stage_inst (
@@ -107,12 +129,18 @@ module core (
         .op1                    (op1),
         .op2                    (op2),
         .jal_branch_tgt         (jal_branch_tgt),
+        .jal_vld                (jal_vld),
+        .ctrl_transfer_pkt      (ctrl_transfer_pkt),
         .alu_op                 (alu_op),
         .rf_ctrl_pkt            (rf_ctrl_pkt_D),
         .dmem_req_ctrl_pkt      (dmem_req_ctrl_pkt),
         .dmem_store_data        (dmem_store_data),
+        .vld_in                 (F_vld),
+        .vld                    (D_vld),
         .stall_in               (X_stall),
-        .stall                  (D_stall)
+        .stall                  (D_stall),
+        .squash_in              (X_squash),
+        .squash                 (D_squash)
     );
 
     X_stage X_stage_inst (
@@ -126,9 +154,17 @@ module core (
         .pc_plus4_in            (pc_plus4_D),
         .branch_tgt_in          (jal_branch_tgt),
         .branch_tgt             (branch_tgt),
+        .branch_vld             (branch_vld),
+        .ctrl_transfer_pkt_in   (ctrl_transfer_pkt),
+        .jalr_tgt               (jalr_tgt),
+        .jalr_vld               (jalr_vld),
         .data_out               (X_out),
+        .vld_in                 (D_vld),
+        .vld                    (X_vld),
         .stall_in               (M_stall),
-        .stall                  (X_stall)
+        .stall                  (X_stall),
+        .squash_in              (M_squash),
+        .squash                 (X_squash)
     );
 
     M_stage M_stage_inst (
@@ -140,8 +176,12 @@ module core (
         .rf_ctrl_pkt_in         (rf_ctrl_pkt_X),
         .rf_ctrl_pkt_out        (rf_ctrl_pkt_M),
         .data_out               (M_out),
+        .vld_in                 (X_vld),
+        .vld                    (M_vld),
         .stall_in               (W_stall),
-        .stall                  (M_stall)
+        .stall                  (M_stall),
+        .squash_in              (W_squash),
+        .squash                 (M_squash)
     );
 
     W_stage W_stage_inst (
@@ -151,7 +191,12 @@ module core (
         .rf_ctrl_pkt_out        (rf_ctrl_pkt_W),
         .data_in                (M_out),
         .data_out               (W_out),
-        .stall                  (W_stall)
+        .vld_in                 (M_vld),
+        .vld                    (W_vld),
+        .stall_in               (1'b0),
+        .stall                  (W_stall),
+        .squash_in              (1'b0),
+        .squash                 (W_squash)
     );
 
     lsu lsu_inst (

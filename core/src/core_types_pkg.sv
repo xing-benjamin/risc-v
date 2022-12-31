@@ -18,21 +18,21 @@ package core_types_pkg;
     } alu_op_t;
 
     typedef enum logic[3:0] {
-        ADD = 4'b0000,
-        SUB = 4'b0001,
-        SLL = 4'b0010,
-        SLT = 4'b0100,
-        SLTU = 4'b0110,
-        XOR = 4'b1000,
-        SRL = 4'b1010,
-        SRA = 4'b1011,
-        OR = 4'b1100,
-        AND = 4'b1110
+        ADD     = 4'b0000,
+        SUB     = 4'b0001,
+        SLL     = 4'b0010,
+        SLT     = 4'b0100,
+        SLTU    = 4'b0110,
+        XOR     = 4'b1000,
+        SRL     = 4'b1010,
+        SRA     = 4'b1011,
+        OR      = 4'b1100,
+        AND     = 4'b1110
     } alu_op_e;
 
     typedef struct packed {
         logic [RF_IDX_WIDTH-1:0]    rd;
-        logic                       vld;
+        logic                       wr_en;
     } rf_ctrl_t;
 
     typedef struct packed {
@@ -40,5 +40,11 @@ package core_types_pkg;
         logic       mtype; // 0 = read, 1 = write
         logic [1:0] len;
     } dmem_req_ctrl_t;
+
+    typedef struct packed {
+        logic       is_jal;
+        logic       is_jalr;
+        logic       is_branch;
+    } ctrl_transfer_t;
 
 endpackage

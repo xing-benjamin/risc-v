@@ -7,7 +7,9 @@
 # Library directories
 +libext+.v+.sv
 -y $(COMMON_DIR)/interfaces
--y $(DESIGN_LIB)/lib
+
+# Design lib command file
+-f $(DESIGN_LIB)/lib/design_lib.cf
 
 # Packages
 $(CORE_DIR)/src/riscv_pkg.sv
