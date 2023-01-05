@@ -1,4 +1,4 @@
-# Core iverilog command file
+# Core simulation command file
 
 # Include directories
 +incdir+$(COMMON_DIR)/include

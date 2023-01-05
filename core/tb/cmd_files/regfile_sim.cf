@@ -1,0 +1,22 @@
+# Register file simulation command file
+
+# Include directories
++incdir+$(COMMON_DIR)/include
++incdir+$(CORE_DIR)/src
+
+# Library directories
++libext+.v+.sv
+-y $(COMMON_DIR)/interfaces
+
+# Design lib command file
+-f $(DESIGN_LIB)/lib/design_lib.cf
+
+# Source files
+$(CORE_DIR)/src/regfile.sv
+
+# Testbench files
+$(CORE_DIR)/tb/regfile_tb.sv
+
+# Simulation directives
++define+BUILD_DIR_PATH="./build"
++timescale+10ns/1ns
