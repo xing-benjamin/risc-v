@@ -207,7 +207,11 @@ module core (
         .dmem_wr_data_in        (dmem_store_data),
         .is_dmem_rd             (is_dmem_rd),
         .dmem_req_out_vld       (dmem_req_vld),
-        .dmem_req_out           (dmem_req)
+        .dmem_req_out           (dmem_req),
+        .vld_0                  (X_vld),
+        .vld_1                  (M_vld),
+        .stall_0                (X_stall),
+        .stall_1                (M_stall)
     );
 
     ///////////////////////

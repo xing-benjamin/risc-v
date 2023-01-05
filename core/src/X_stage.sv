@@ -42,6 +42,11 @@ module X_stage (
     logic                       gen_squash;
     logic                       vld_raw;
     ctrl_transfer_t             ctrl_transfer_pkt;
+    logic                       eq;
+    logic                       lt;
+    logic                       ltu;
+    logic                       branch_cmp_result;
+    logic                       branch_taken;
 
     //////////////////////////////
     //    Pipeline registers    //
@@ -75,9 +80,6 @@ module X_stage (
         .d          (ctrl_transfer_pkt_in),
         .q          (ctrl_transfer_pkt)
     );
-
-    assign jalr_vld = vld && ctrl_transfer_pkt.is_jalr;
-    assign branch_vld = vld && ctrl_transfer_pkt.is_branch && 1'b0;
 
     dl_reg_en_rst #(
         .NUM_BITS   (N_BITS)
@@ -130,16 +132,15 @@ module X_stage (
     );
 
     // ALU
-    alu #(
-        .N_BITS (N_BITS)
-    ) alu_inst (
+    alu alu_inst (
         .alu_op     (alu_op),
         .in0        (op1),
         .in1        (op2),
-        .out        (alu_out)
+        .out        (alu_out),
+        .eq         (eq),
+        .lt         (lt),
+        .ltu        (ltu)
     );
-
-    assign jalr_tgt = alu_out;
 
     dl_mux2 #(
         .NUM_BITS (N_BITS)
@@ -149,6 +150,22 @@ module X_stage (
         .sel        (ctrl_transfer_pkt.is_jal || ctrl_transfer_pkt.is_jalr),
         .out        (data_out)
     );
+
+    assign jalr_tgt = alu_out;
+    assign jalr_vld = vld && ctrl_transfer_pkt.is_jalr;
+
+    dl_mux4 #(
+        .NUM_BITS   (1)
+    ) branch_funct_mux (
+        .in0        (eq),
+        .in1        (1'b0), // unused
+        .in2        (lt),
+        .in3        (ltu),
+        .sel        (ctrl_transfer_pkt.branch_fn[2:1]),
+        .out        (branch_cmp_result)
+    );
+    assign branch_taken = branch_cmp_result ^ ctrl_transfer_pkt.branch_fn[0];
+    assign branch_vld = vld && ctrl_transfer_pkt.is_branch && branch_taken;
 
     ///////////////////////
     //  Control signals  //

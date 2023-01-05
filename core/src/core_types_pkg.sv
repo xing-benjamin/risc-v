@@ -42,8 +42,6 @@ package core_types_pkg;
         ALU_OP_AND  = {ALU_FN_AND, 1'b0}
     } alu_op_e;
 
-
-
     typedef struct packed {
         logic [RF_IDX_WIDTH-1:0]    rd;
         logic                       wr_en;
@@ -59,6 +57,7 @@ package core_types_pkg;
         logic       is_jal;
         logic       is_jalr;
         logic       is_branch;
+        logic [2:0] branch_fn;
     } ctrl_transfer_t;
 
 endpackage

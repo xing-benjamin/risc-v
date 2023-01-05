@@ -161,16 +161,18 @@ module D_stage (
     end
 
     // ALU op generation
-    assign comp_inst_alu_op.alu_opcode = funct3;
-    assign comp_inst_alu_op.aux_sel =
-        (instr[14:12] == 3'b0 && decoded_opcode.RI) ? 1'b0 : instr[30];
+    logic [1:0] alu_op_mux_sel;
+    assign alu_op_mux_sel[1] = decoded_opcode.RR | decoded_opcode.RI;
+    assign alu_op_mux_sel[0] = decoded_opcode.RI | decoded_opcode.BRANCH;
 
-    dl_mux2 #(
+    dl_mux4 #(
         .NUM_BITS   ($bits(alu_op_t))
     ) alu_op_mux (
-        .in0    (comp_inst_alu_op),
-        .in1    (4'b0),
-        .sel    (!(decoded_opcode.RR | decoded_opcode.RI)),
+        .in0    (core_types_pkg::ALU_OP_ADD),    // default
+        .in1    (core_types_pkg::ALU_OP_SUB),    // BRANCH
+        .in2    ({funct3, instr[30]}),           // RR
+        .in3    ({funct3, instr[30] & |funct3}), // RI
+        .sel    (alu_op_mux_sel),
         .out    (alu_op)
     );
 
@@ -179,7 +181,8 @@ module D_stage (
     assign ctrl_transfer_pkt.is_jal = decoded_opcode.JAL;
     assign ctrl_transfer_pkt.is_jalr = decoded_opcode.JALR;
     assign ctrl_transfer_pkt.is_branch = decoded_opcode.BRANCH;
-
+    assign ctrl_transfer_pkt.branch_fn = funct3;
+    
     // Register file writeback
     assign rf_ctrl_pkt.wr_en = (decoded_instr_fmt.R_type |
                                 decoded_instr_fmt.I_type |
@@ -279,9 +282,9 @@ module D_stage (
     ///////////////////////
     //  Control signals  //
     ///////////////////////
-    assign gen_stall = vld && /*X_vld &&*/ ((rs1_vld && rs1 == X_rf_ctrl_pkt.rd) ||
-                        (rs2_vld && rs2 == X_rf_ctrl_pkt.rd)) && X_rf_ctrl_pkt.wr_en &&
-                        nxt_stg_is_dmem_rd;
+    assign gen_stall = vld && nxt_stg_is_dmem_rd &&  X_rf_ctrl_pkt.wr_en &&
+                       ((rs1_vld && rs1 == X_rf_ctrl_pkt.rd) ||
+                        (rs2_vld && rs2 == X_rf_ctrl_pkt.rd));
     assign stall = stall_in || gen_stall;
 
     assign gen_squash = jal_vld;
