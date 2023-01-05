@@ -9,26 +9,31 @@
     -----------|--------------------
         ADD    |  0  0  0   0
         SUB    |  0  0  0   1
-        SLL    |  0  0  1   0
-        SLT    |  0  1  0   0
-        SLTU   |  0  1  1   0
-        XOR    |  1  0  0   0
+        SLL    |  0  0  1   x
+        SLT    |  0  1  0   x
+        SLTU   |  0  1  1   x
+        XOR    |  1  0  0   x
         SRL    |  1  0  1   0
         SRA    |  1  0  1   1
-        OR     |  1  1  0   0
-        AND    |  1  1  1   0
+        OR     |  1  1  0   x
+        AND    |  1  1  1   x
+
+    The aux_sel bit is used to differentiate between ADD and SUB
+    operations as well as SRL and SRA operations. For all other
+    ALU operations aux_sel is don't care (1'bx).
 */
 //--------------------------------------------------------------
+
 import core_types_pkg::*;
 
-module alu #(
-    parameter N_BITS = 32,
-    localparam N_BITS_LOG2 = $clog2(N_BITS)
-)(
+module alu (
     input  alu_op_t             alu_op,
     input  logic [N_BITS-1:0]   in0,
     input  logic [N_BITS-1:0]   in1,
-    output logic [N_BITS-1:0]   out
+    output logic [N_BITS-1:0]   out,
+    output logic                eq,     // in0 == in1
+    output logic                lt,     // in0 < in1
+    output logic                ltu     // unsigned(in0) < unsigned(in1)
 );
 
     //================
@@ -60,17 +65,27 @@ module alu #(
         .cout   (alu_adder_ovfl)
     );
 
+    //===================
+    // branch cmp flags
+    //===================
+    logic sign0;
+    logic sign1;
+    assign sign0 = in0[N_BITS-1]; // 0 = positive, 1 = negative
+    assign sign1 = in1[N_BITS-1];
+
+    assign eq = !(|alu_adder_sum | alu_adder_ovfl);
+    assign lt = (sign0 && !sign1) ||
+                (sign0 || !sign1) && alu_adder_sum[N_BITS-1];
+    assign ltu = !alu_adder_ovfl;
+
     //=================
     //    SLT, SLTU
     //=================
     logic [N_BITS-1:0]  alu_slt_out;
     logic [N_BITS-1:0]  alu_sltu_out;
 
-    assign alu_slt_out = (!in0[N_BITS-1] & in1[N_BITS-1]) ? '0 :
-                         (in0[N_BITS-1] & !in1[N_BITS-1]) ? {{(N_BITS-1){1'b0}}, 1'b1} :
-                         (alu_adder_sum[N_BITS-1]) ? {{(N_BITS-1){1'b0}}, 1'b1} : '0;
-    // FIXME BEN: review this logic
-    assign alu_sltu_out = (!alu_adder_ovfl) ? {{(N_BITS-1){1'b0}}, 1'b1} : '0;
+    assign alu_slt_out = lt;    // automatic left zero-extend to N_BITS width
+    assign alu_sltu_out = ltu;  // automatic left zero-extend to N_BITS width
 
     //=================
     //  SLL, SRL, SRA
@@ -140,7 +155,7 @@ module alu #(
         .in5    (alu_rshift_out),
         .in6    (alu_or_out),
         .in7    (alu_and_out),
-        .sel    (alu_op.alu_opcode),
+        .sel    (alu_op.funct),
         .out    (out)
     );
 
