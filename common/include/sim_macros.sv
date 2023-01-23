@@ -30,3 +30,4 @@
         $error(message); \
     end
 
+`define PATHSTR(x) `"x`"

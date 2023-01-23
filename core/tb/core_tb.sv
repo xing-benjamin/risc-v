@@ -33,6 +33,12 @@ module core_tb;
     logic       imem_rsp_vld;
     logic       imem_rsp_rdy;
     mem_pkt_t   imem_rsp;
+    logic       dmem_req_vld;
+    logic       dmem_req_rdy;
+    mem_pkt_t   dmem_req;
+    logic       dmem_rsp_vld;
+    logic       dmem_rsp_rdy;
+    mem_pkt_t   dmem_rsp;
 
     core dut (
         .clk            (clk),
@@ -42,7 +48,13 @@ module core_tb;
         .imem_req       (imem_req),
         .imem_rsp_vld   (imem_rsp_vld),
         .imem_rsp_rdy   (imem_rsp_rdy),
-        .imem_rsp       (imem_rsp)
+        .imem_rsp       (imem_rsp),
+        .dmem_req_vld   (dmem_req_vld),
+        .dmem_req_rdy   (dmem_req_rdy),
+        .dmem_req       (dmem_req),
+        .dmem_rsp_vld   (dmem_rsp_vld),
+        .dmem_rsp_rdy   (dmem_rsp_rdy),
+        .dmem_rsp       (dmem_rsp)
     );
 
     memory_model imem (
@@ -56,8 +68,20 @@ module core_tb;
         .pkt_out        (imem_rsp)
     );
 
+    memory_model dmem (
+        .clk            (clk),
+        .rst_n          (rst_n),
+        .pkt_in_vld     (dmem_req_vld),
+        .pkt_in_rdy     (dmem_req_rdy),
+        .pkt_in         (dmem_req),
+        .pkt_out_vld    (dmem_rsp_vld),
+        .pkt_out_rdy    (dmem_rsp_rdy),
+        .pkt_out        (dmem_rsp)
+    );
+
     initial begin
-        $readmemh("/Users/benjaminxing/Projects/risc-v/core/tb/load_imem.mem", imem.mem);
+        $readmemh($sformatf("%s.hex", `PATHSTR(`TEST_PATH)), imem.mem);
+        $readmemh("/Users/benjaminxing/Projects/risc-v/core/tb/dmem.hex", dmem.mem);
     end
 
     // dump vcd

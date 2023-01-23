@@ -1,0 +1,23 @@
+# Core RTL command file
+
+# Include directories
++incdir+$(CORE_DIR)/src
+
+# Design lib command file
+-f $(DESIGN_LIB)/lib/design_lib.cf
+
+# Packages
+$(CORE_DIR)/src/riscv_pkg.sv
+$(CORE_DIR)/src/core_types_pkg.sv
+$(CORE_DIR)/memory/memory_types_pkg.sv
+
+# Source files
+$(CORE_DIR)/src/alu.sv
+$(CORE_DIR)/src/lsu.sv
+$(CORE_DIR)/src/regfile.sv
+$(CORE_DIR)/src/F_stage.sv
+$(CORE_DIR)/src/D_stage.sv
+$(CORE_DIR)/src/X_stage.sv
+$(CORE_DIR)/src/M_stage.sv
+$(CORE_DIR)/src/W_stage.sv
+$(CORE_DIR)/src/core.sv

@@ -10,7 +10,8 @@ core: $(BUILD_DIR)/core.vvp
 	vvp -n -l $(BUILD_DIR)/core_tb.log $(BUILD_DIR)/core.vvp
 
 $(BUILD_DIR)/core.vvp: build_dir $(SRC_DIR)/core.sv $(TB_DIR)/core_tb.sv
-	iverilog -Wall -g2012 -o $@ -c$(TB_DIR)/cmd_files/core_sim.cf
+	iverilog -Wall -g2012 -o $@ -c$(TB_DIR)/cmd_files/core_sim.cf \
+	-DTEST_PATH=$(TB_DIR)/tests/$(TEST)
 
 regfile: $(BUILD_DIR)/regfile.vvp
 	vvp -n -l $(BUILD_DIR)/regfile.log $(BUILD_DIR)/regfile.vvp
