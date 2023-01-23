@@ -6,6 +6,9 @@
 */
 //--------------------------------------------------------------
 
+`ifndef __CORE_TYPES_PKG_SV__
+`define __CORE_TYPES_PKG_SV__
+
 package core_types_pkg;
 
     localparam N_BITS = 32;
@@ -61,3 +64,5 @@ package core_types_pkg;
     } ctrl_transfer_t;
 
 endpackage
+
+`endif // __CORE_TYPES_PKG_SV__

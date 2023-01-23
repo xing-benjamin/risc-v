@@ -6,6 +6,9 @@
 */
 //--------------------------------------------------------------
 
+`ifndef __MEMORY_TYPES_PKG_SV__
+`define __MEMORY_TYPES_PKG_SV__
+
 package memory_types_pkg;
 
     typedef struct packed {
@@ -21,3 +24,5 @@ package memory_types_pkg;
     } mem_pkt_type_e;
 
 endpackage
+
+`endif // __MEMORY_TYPES_PKG_SV__

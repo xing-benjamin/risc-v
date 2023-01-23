@@ -7,6 +7,9 @@
 */
 //--------------------------------------------------------------
 
+`ifndef __RISCV_PKG_SV__
+`define __RISCV_PKG_SV__
+
 package riscv_pkg;
 
     localparam  OPCODE_LEN = 7;
@@ -60,3 +63,5 @@ package riscv_pkg;
     } instr_fmt_1hot_struct_t;
 
 endpackage
+
+`endif // __RISCV_PKG_SV__

@@ -282,7 +282,7 @@ module D_stage (
     ///////////////////////
     //  Control signals  //
     ///////////////////////
-    assign gen_stall = vld && nxt_stg_is_dmem_rd &&  X_rf_ctrl_pkt.wr_en &&
+    assign gen_stall = vld_raw && nxt_stg_is_dmem_rd &&  X_rf_ctrl_pkt.wr_en &&
                        ((rs1_vld && rs1 == X_rf_ctrl_pkt.rd) ||
                         (rs2_vld && rs2 == X_rf_ctrl_pkt.rd));
     assign stall = stall_in || gen_stall;
