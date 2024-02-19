@@ -11,8 +11,7 @@ import core_types_pkg::*;
 module F_stage (
     input  logic            clk,
     input  logic            rst_n,
-    output [N_BITS-1:0]     pc,
-    output [N_BITS-1:0]     pc_plus4,
+    input  [N_BITS-1:0]     pc,
     output [N_BITS-1:0]     next_pc,
     input  [N_BITS-1:0]     jal_tgt,
     input                   jal_vld,
@@ -28,13 +27,15 @@ module F_stage (
     output logic            squash
 );
 
-    logic                   pc_reg_en;
+    logic [N_BITS-1:0]      pc_plus4;
     logic [1:0]             next_pc_mux_sel;
     logic                   gen_stall;
     logic                   gen_squash;
     logic                   vld_raw;
 
     assign pc_reg_en = rst_n && !stall; // FIXME BEN
+
+    assign pc_plus4 = pc + 4;
 
     // Valid bit
     dl_reg_en_rst #(
@@ -46,21 +47,6 @@ module F_stage (
         .d          (vld_in),
         .q          (vld_raw)
     );
-
-    // Program counter
-    dl_reg_en_rst #(
-        .NUM_BITS   (N_BITS),
-        // 1st instruction fetched at 0x00000000
-        .RST_VAL    (32'hfffffffc)
-    ) program_cntr (
-        .clk        (clk),
-        .rst_n      (rst_n),
-        .en         (pc_reg_en),
-        .d          (next_pc),
-        .q          (pc)
-    );
-
-    assign pc_plus4 = pc + 32'd4;
 
     dl_mux4 #(
         .NUM_BITS   (N_BITS)

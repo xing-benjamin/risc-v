@@ -1,7 +1,5 @@
 /**/
 
-#include <stdlib.h>
-
 // Include common routines
 #include <verilated.h>
 #include <verilated_vcd_c.h>
@@ -47,6 +45,17 @@ int main(int argc, char** argv) {
     // Using unique_ptr is similar to "Vcore* core = new Vcore" then deleting at end.
     // "CORE" will be the hierarchical name of the module.
     const std::unique_ptr<Vcore> core{new Vcore{contextp.get(), "CORE"}};
+
+    const std::unique_ptr<VerilatedVcdC> m_trace{new VerilatedVcdC};
+    core->trace(m_trace, 5);
+    m_trace->open("core_tb.vcd")
+
+    
+    while (!contextp->gotFinish()) {
+        
+    }
+
+    m_trace->close();
 
     // Return good completion status
     // Don't use exit() or destructor won't get called

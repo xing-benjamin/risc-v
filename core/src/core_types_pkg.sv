@@ -16,6 +16,8 @@ package core_types_pkg;
     localparam RF_N_REGS = 32;
     localparam RF_IDX_WIDTH = $clog2(RF_N_REGS);
 
+    localparam logic [31:0] PC_RESET = 32'hfffffffc;
+
     typedef struct packed {
         logic [2:0] funct;
         logic       aux_sel;

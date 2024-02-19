@@ -54,12 +54,12 @@ package riscv_pkg;
     } instr_formats_e;
 
     typedef struct packed {
-        logic   R_type;
-        logic   I_type;
-        logic   S_type;
-        logic   B_type;
-        logic   U_type;
-        logic   J_type;
+        logic   R_fmt;
+        logic   I_fmt;
+        logic   S_fmt;
+        logic   B_fmt;
+        logic   U_fmt;
+        logic   J_fmt;
     } instr_fmt_1hot_struct_t;
 
 endpackage

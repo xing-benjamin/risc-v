@@ -5,6 +5,7 @@
 
 ### build directories ###
 */build
+*/obj_dir
 
 ### simulation files ###
 *.vvp

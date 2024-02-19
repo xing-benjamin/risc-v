@@ -16,7 +16,7 @@ module X_stage (
     output rf_ctrl_t            rf_ctrl_pkt_out,
     input  logic [N_BITS-1:0]   op1_nxt,
     input  logic [N_BITS-1:0]   op2_nxt,
-    input  logic [N_BITS-1:0]   pc_plus4_in,
+    input  logic [N_BITS-1:0]   pc,
     input  logic [N_BITS-1:0]   branch_tgt_in,
     output logic [N_BITS-1:0]   branch_tgt,
     output logic                branch_vld,
@@ -48,6 +48,7 @@ module X_stage (
     logic                       branch_cmp_result;
     logic                       branch_taken;
 
+    assign pc_plus4 = pc + 4;
     //////////////////////////////
     //    Pipeline registers    //
     //////////////////////////////
@@ -59,16 +60,6 @@ module X_stage (
         .en         (!stall),
         .d          (vld_in),
         .q          (vld_raw)
-    );
-
-    dl_reg_en_rst #(
-        .NUM_BITS   (N_BITS)
-    ) X_pc_plus_4_reg (
-        .clk        (clk),
-        .rst_n      (rst_n),
-        .en         (!stall),
-        .d          (pc_plus4_in),
-        .q          (pc_plus4)
     );
 
     dl_reg_en_rst #(

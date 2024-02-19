@@ -83,9 +83,8 @@ module alu (
     //=================
     logic [N_BITS-1:0]  alu_slt_out;
     logic [N_BITS-1:0]  alu_sltu_out;
-
-    assign alu_slt_out = lt;    // automatic left zero-extend to N_BITS width
-    assign alu_sltu_out = ltu;  // automatic left zero-extend to N_BITS width
+    assign alu_slt_out = {{(N_BITS-1){1'b0}}, lt};
+    assign alu_sltu_out = {{(N_BITS-1){1'b0}}, ltu};
 
     //=================
     //  SLL, SRL, SRA

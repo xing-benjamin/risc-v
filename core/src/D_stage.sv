@@ -12,10 +12,14 @@ import core_types_pkg::*;
 module D_stage (
     input  logic                    clk,
     input  logic                    rst_n,
-    input  logic [N_BITS-1:0]       nxt_instr,
-    input  logic [N_BITS-1:0]       pc_in,
-    input  logic [N_BITS-1:0]       pc_plus4_in,
-    output logic [N_BITS-1:0]       pc_plus4_out,
+    input  logic                    vld_in,
+    output logic                    vld,
+    input  logic                    stall_in,
+    output logic                    stall,
+    input  logic                    squash_in,
+    output logic                    squash,
+    input  logic [N_BITS-1:0]       instr,
+    input  logic [N_BITS-1:0]       pc,
     output logic [RF_IDX_WIDTH-1:0] rs1,
     output logic [RF_IDX_WIDTH-1:0] rs2,
     input  logic [N_BITS-1:0]       rs1_data,
@@ -35,24 +39,15 @@ module D_stage (
     output alu_op_t                 alu_op,
     output rf_ctrl_t                rf_ctrl_pkt,
     output dmem_req_ctrl_t          dmem_req_ctrl_pkt,
-    output logic [N_BITS-1:0]       dmem_store_data,
-    input  logic                    vld_in,
-    output logic                    vld,
-    input  logic                    stall_in,
-    output logic                    stall,
-    input  logic                    squash_in,
-    output logic                    squash
+    output logic [N_BITS-1:0]       dmem_store_data
 );
 
-    logic [N_BITS-1:0]              instr;
-    logic [N_BITS-1:0]              pc;
     logic [OPCODE_LEN-1:0]          opcode;
     logic [FUNCT3_LEN-1:0]          funct3;
-    logic [2:0]                     instr_format;
     logic [N_BITS-1:0]              imm;
     alu_op_t                        comp_inst_alu_op;
-    opcode_1hot_struct_t            decoded_opcode;
-    instr_fmt_1hot_struct_t         decoded_instr_fmt;
+    opcode_1hot_struct_t            opcode_dec;
+    instr_fmt_1hot_struct_t         instr_fmt_dec;
     logic [N_BITS-1:0]              op1_raw;
     logic [N_BITS-1:0]              op2_raw;
     logic                           rs1_vld;
@@ -74,39 +69,19 @@ module D_stage (
         .q          (vld_raw)
     );
 
-    dl_reg_en_rst #(
-        .NUM_BITS   (N_BITS)
-    ) D_imem_rsp_instr_reg (
-        .clk        (clk),
-        .rst_n      (rst_n),
-        .en         (!stall),
-        .d          (nxt_instr),
-        .q          (instr)
-    );
-
-    dl_reg_en_rst #(
-        .NUM_BITS   (N_BITS)
-    ) D_pc_reg (
-        .clk        (clk),
-        .rst_n      (rst_n),
-        .en         (!stall),
-        .d          (pc_in),
-        .q          (pc)
-    );
-
-    dl_reg_en_rst #(
-        .NUM_BITS   (32)
-    ) D_pc_plus_4_reg (
-        .clk        (clk),
-        .rst_n      (rst_n),
-        .en         (!stall),
-        .d          (pc_plus4_in),
-        .q          (pc_plus4_out)
-    );
 
     // Decode source and destination registers
     // In RISC-V, these are always specified in the same bit positions across
     // all instructions to simplify decode logic.
+    // 31           25 24   20 19   15 14    12 11          7 6      0
+    // ================================================================
+    // |    funct7    |  rs2  |  rs1  | funct3 |     rd      | opcode |  R-type
+    // |      imm[11:0]       |  rs1  | funct3 |     rd      | opcode |  I-type
+    // |  imm[11:5]   |  rs2  |  rs1  | funct3 |  imm[4:0]   | opcode |  S-type
+    // | imm[12|10:5] |  rs2  |  rs1  | funct3 | imm[4:1|11] | opcode |  B-type
+    // |               imm[31:12]              |     rd      | opcode |  U-type
+    // |         imm[20|10:1|11|19:12]         |     rd      | opcode |  J-type
+    // ================================================================
     assign rf_ctrl_pkt.rd = instr[11:7];
     assign rs1 = instr[19:15];
     assign rs2 = instr[24:20];
@@ -114,56 +89,53 @@ module D_stage (
     assign funct3 = instr[14:12];
 
     // Decode instruction opcode
-    assign decoded_opcode.LUI    = (opcode == riscv_pkg::LUI);
-    assign decoded_opcode.AUIPC  = (opcode == riscv_pkg::AUIPC);
-    assign decoded_opcode.JAL    = (opcode == riscv_pkg::JAL);
-    assign decoded_opcode.JALR   = (opcode == riscv_pkg::JALR);
-    assign decoded_opcode.BRANCH = (opcode == riscv_pkg::BRANCH);
-    assign decoded_opcode.LOAD   = (opcode == riscv_pkg::LOAD);
-    assign decoded_opcode.STORE  = (opcode == riscv_pkg::STORE);
-    assign decoded_opcode.RI     = (opcode == riscv_pkg::RI);
-    assign decoded_opcode.RR     = (opcode == riscv_pkg::RR);
-    assign decoded_opcode.FENCE  = (opcode == riscv_pkg::FENCE);
-    assign decoded_opcode.EXCPT  = (opcode == riscv_pkg::EXCPT);
-
-    // Opcode -> instruction format mapping
     always_comb begin
-        if      (decoded_opcode.LUI)    instr_format = riscv_pkg::U_type;
-        else if (decoded_opcode.AUIPC)  instr_format = riscv_pkg::U_type;
-        else if (decoded_opcode.JAL)    instr_format = riscv_pkg::J_type;
-        else if (decoded_opcode.JALR)   instr_format = riscv_pkg::I_type;
-        else if (decoded_opcode.BRANCH) instr_format = riscv_pkg::B_type;
-        else if (decoded_opcode.LOAD)   instr_format = riscv_pkg::I_type;
-        else if (decoded_opcode.STORE)  instr_format = riscv_pkg::S_type;
-        else if (decoded_opcode.RI)     instr_format = riscv_pkg::I_type;
-        else if (decoded_opcode.RR)     instr_format = riscv_pkg::R_type;
-        else                            instr_format = riscv_pkg::NONE_t;
-    end
+        opcode_dec = opcode_1hot_struct_t'(0);
+        instr_fmt_dec = instr_fmt_1hot_struct_t'(0);
 
-    // Decode instruction format
-    assign decoded_instr_fmt.R_type = (instr_format == riscv_pkg::R_type);
-    assign decoded_instr_fmt.I_type = (instr_format == riscv_pkg::I_type);
-    assign decoded_instr_fmt.S_type = (instr_format == riscv_pkg::S_type);
-    assign decoded_instr_fmt.B_type = (instr_format == riscv_pkg::B_type);
-    assign decoded_instr_fmt.U_type = (instr_format == riscv_pkg::U_type);
-    assign decoded_instr_fmt.J_type = (instr_format == riscv_pkg::J_type);
+        // Opcode decode
+        case (opcode)
+            riscv_pkg::LUI:     opcode_dec.LUI      = 1'b1;
+            riscv_pkg::AUIPC:   opcode_dec.AUIPC    = 1'b1;
+            riscv_pkg::JAL:     opcode_dec.JAL      = 1'b1;
+            riscv_pkg::JALR:    opcode_dec.JALR     = 1'b1;
+            riscv_pkg::BRANCH:  opcode_dec.BRANCH   = 1'b1;
+            riscv_pkg::LOAD:    opcode_dec.LOAD     = 1'b1;
+            riscv_pkg::STORE:   opcode_dec.STORE    = 1'b1;
+            riscv_pkg::RI:      opcode_dec.RI       = 1'b1;
+            riscv_pkg::RR:      opcode_dec.RR       = 1'b1;
+            riscv_pkg::FENCE:   opcode_dec.FENCE    = 1'b1;
+            riscv_pkg::EXCPT:   opcode_dec.EXCPT    = 1'b1;
+        endcase
+
+        // Instruction format decode
+        case (opcode)
+            riscv_pkg::LUI:     instr_fmt_dec.U_fmt = 1'b1;
+            riscv_pkg::AUIPC:   instr_fmt_dec.U_fmt = 1'b1;
+            riscv_pkg::JAL:     instr_fmt_dec.J_fmt = 1'b1;
+            riscv_pkg::JALR:    instr_fmt_dec.I_fmt = 1'b1;
+            riscv_pkg::BRANCH:  instr_fmt_dec.B_fmt = 1'b1;
+            riscv_pkg::LOAD:    instr_fmt_dec.I_fmt = 1'b1;
+            riscv_pkg::STORE:   instr_fmt_dec.S_fmt = 1'b1;
+            riscv_pkg::RI:      instr_fmt_dec.I_fmt = 1'b1;
+            riscv_pkg::RR:      instr_fmt_dec.R_fmt = 1'b1;
+        endcase
+    end
 
     // Immediate generation
     always_comb begin
-        case (instr_format)
-            riscv_pkg::I_type: imm = {{21{instr[31]}}, instr[30:20]};
-            riscv_pkg::S_type: imm = {{21{instr[31]}}, instr[30:25], instr[11:7]};
-            riscv_pkg::B_type: imm = {{20{instr[31]}}, instr[7], instr[30:25], instr[11:8], 1'b0};
-            riscv_pkg::U_type: imm = {instr[31:12], 12'b0};
-            riscv_pkg::J_type: imm = {{12{instr[31]}}, instr[19:12], instr[20], instr[30:21], 1'b0};
-            default: imm = 32'b0;
-        endcase
+        if      (instr_fmt_dec.I_fmt) imm = {{21{instr[31]}}, instr[30:20]};
+        else if (instr_fmt_dec.S_fmt) imm = {{21{instr[31]}}, instr[30:25], instr[11:7]};
+        else if (instr_fmt_dec.B_fmt) imm = {{20{instr[31]}}, instr[7], instr[30:25], instr[11:8], 1'b0};
+        else if (instr_fmt_dec.U_fmt) imm = {instr[31:12], 12'b0};
+        else if (instr_fmt_dec.J_fmt) imm = {{12{instr[31]}}, instr[19:12], instr[20], instr[30:21], 1'b0};
+        else                          imm = 32'b0;
     end
 
     // ALU op generation
     logic [1:0] alu_op_mux_sel;
-    assign alu_op_mux_sel[1] = decoded_opcode.RR | decoded_opcode.RI;
-    assign alu_op_mux_sel[0] = decoded_opcode.RI | decoded_opcode.BRANCH;
+    assign alu_op_mux_sel[1] = opcode_dec.RR | opcode_dec.RI;
+    assign alu_op_mux_sel[0] = opcode_dec.RI | opcode_dec.BRANCH;
 
     dl_mux4 #(
         .NUM_BITS   ($bits(alu_op_t))
@@ -176,32 +148,32 @@ module D_stage (
         .out    (alu_op)
     );
 
-    assign jal_vld = vld && decoded_opcode.JAL;
+    assign jal_vld = vld && opcode_dec.JAL;
 
-    assign ctrl_transfer_pkt.is_jal = decoded_opcode.JAL;
-    assign ctrl_transfer_pkt.is_jalr = decoded_opcode.JALR;
-    assign ctrl_transfer_pkt.is_branch = decoded_opcode.BRANCH;
+    assign ctrl_transfer_pkt.is_jal = opcode_dec.JAL;
+    assign ctrl_transfer_pkt.is_jalr = opcode_dec.JALR;
+    assign ctrl_transfer_pkt.is_branch = opcode_dec.BRANCH;
     assign ctrl_transfer_pkt.branch_fn = funct3;
     
     // Register file writeback
-    assign rf_ctrl_pkt.wr_en = (decoded_instr_fmt.R_type |
-                                decoded_instr_fmt.I_type |
-                                decoded_instr_fmt.U_type |
-                                decoded_instr_fmt.J_type);
+    assign rf_ctrl_pkt.wr_en = instr_fmt_dec.R_fmt |
+                               instr_fmt_dec.I_fmt |
+                               instr_fmt_dec.U_fmt |
+                               instr_fmt_dec.J_fmt;
 
-    assign rs1_vld = (decoded_instr_fmt.R_type |
-                      decoded_instr_fmt.I_type |
-                      decoded_instr_fmt.S_type |
-                      decoded_instr_fmt.B_type);
+    assign rs1_vld = instr_fmt_dec.R_fmt |
+                     instr_fmt_dec.I_fmt |
+                     instr_fmt_dec.S_fmt |
+                     instr_fmt_dec.B_fmt;
 
-    assign rs2_vld = (decoded_instr_fmt.R_type |
-                      decoded_instr_fmt.S_type |
-                      decoded_instr_fmt.B_type);
+    assign rs2_vld = instr_fmt_dec.R_fmt |
+                     instr_fmt_dec.S_fmt |
+                     instr_fmt_dec.B_fmt;
 
     // Load/store memory access
-    assign dmem_req_ctrl_pkt.vld = (decoded_opcode.LOAD | 
-                                    decoded_opcode.STORE);
-    assign dmem_req_ctrl_pkt.mtype = decoded_opcode.STORE;
+    assign dmem_req_ctrl_pkt.vld = (opcode_dec.LOAD | 
+                                    opcode_dec.STORE);
+    assign dmem_req_ctrl_pkt.mtype = opcode_dec.STORE;
     assign dmem_req_ctrl_pkt.len = (funct3[1:0] == 2'b00) ? 2'd1 :
                                    (funct3[1:0] == 2'b01) ? 2'd2 : 2'd0;
 
@@ -215,7 +187,7 @@ module D_stage (
     end
 
     logic [N_BITS-1:0]  U_instr_op1;
-    assign U_instr_op1 = (decoded_opcode.AUIPC) ? pc : 32'b0;
+    assign U_instr_op1 = (opcode_dec.AUIPC) ? pc : 32'b0;
 
     // op1 bypass mux
     dl_mux4 #(
@@ -257,7 +229,7 @@ module D_stage (
     ) op1_mux (
         .in0    (op1_raw),
         .in1    (U_instr_op1),
-        .sel    (decoded_instr_fmt.U_type),
+        .sel    (instr_fmt_dec.U_type),
         .out    (op1)
     );
 
@@ -266,7 +238,7 @@ module D_stage (
     ) op2_mux (
         .in0    (op2_raw),
         .in1    (imm),
-        .sel    (!(decoded_opcode.RR)),
+        .sel    (!(opcode_dec.RR)),
         .out    (op2)
     );
 
